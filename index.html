@@ -317,7 +317,7 @@ REGISTRY.types['teoria_electrones'] = { name: 'Teoría de los electrones', templ
   function eofas_1(){
   return {
     tema: "EOFAS",
-    modelos: ["A"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
     prompt: "A la Dirección General de Política de Defensa le corresponde:",
@@ -337,7 +337,7 @@ function eofas_2(){
     "El CIFAS está integrado en el EMACOM",
     "El MOPS está integrado en el Cuartel General del EMAD",
     "El EMACON es el órgano auxiliar de mando del JEMAD",
-    "__META__" // se convertirá en “a) y c) son correctas.”
+    "__META__" // se convertirá en "A y C son correctas."
   ];
 
   const barajadas = shuffle(base);
@@ -345,22 +345,21 @@ function eofas_2(){
 
   const letra = (i) => String.fromCharCode(97 + i);
 
-  // Queremos que la meta siempre se refiera a la 1ª (CIFAS) y la 3ª (EMACON),
-  // aunque cambien de lugar tras el shuffle.
+  // Localizar índices de las opciones que la meta debe referenciar
   const idxCIFAS = barajadas.indexOf("El CIFAS está integrado en el EMACOM");
   const idxEMACON = barajadas.indexOf("El EMACON es el órgano auxiliar de mando del JEMAD");
 
-  // Armamos el texto meta con las letras reales
+  // Reescribir la opción meta con las letras reales
   barajadas[idxMeta] = `${letra(idxCIFAS)}) y ${letra(idxEMACON)}) son correctas.`;
 
   return {
     tema: "EOFAS",
-    modelos: ["A"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
     prompt: "Marcar la respuesta correcta",
     options: barajadas,
-    correct: [2] // ⚠️ cámbialo a mano según cuál/es sean correctas
+    correct: [2] // ⚠️ cámbialo según cuál/es la correcta
   };
 }
 
@@ -369,17 +368,17 @@ function eofas_2(){
 function eofas_3(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "Como órgano de asesoramiento y asistencia inmediata, el Ministro de Defensa cuenta con: Un Gabinete Técnico",
+    prompt: "Como órgano de asesoramiento y asistencia inmediata, el Ministro de Defensa cuenta con:",
     options: [
       "La Dirección General de Política de Defensa",
       "La Oficina de Comunicación de la Defensa",
       "El Consejo Superior de los Ejércitos.",
-      "—"
+      "Un Gabinete Técnico"
     ],
-    correct: [0] // ⚠️ Marcar luego la correcta manualmente
+    correct: [3] // ⚠️ Marcar luego la correcta manualmente
   };
 }
 
@@ -388,34 +387,30 @@ function eofas_4(){
   const base = [
     "Dirigir el Plan de Diplomacia de Defensa",
     "Elaborar y proponer disposiciones en materia de retribuciones militares",
-    "__META__", // se convertirá en “a) y b) son correctas.” (o equivalente)
+    "__META__", // se convertirá en "a) y b) son correctas."
     "El asesoramiento sobre los aspectos relacionados con el estudio, planeamiento y desarrollo de las actividades de las Fuerzas Armadas"
   ];
 
   const barajadas = shuffle(base);
   const idxMeta = barajadas.indexOf("__META__");
 
-  // función para convertir índice en letra
   const letra = (i) => String.fromCharCode(97 + i);
 
-  // por defecto meta hace referencia a los dos primeros (índices 0 y 1)
-  let targets = [0, 1];
+  // Localizar los índices de las dos opciones que la meta debe referenciar
+  const idxDiplomacia = barajadas.indexOf("Dirigir el Plan de Diplomacia de Defensa");
+  const idxRetribuciones = barajadas.indexOf("Elaborar y proponer disposiciones en materia de retribuciones militares");
 
-  // si la opción meta cae en a) o b), evitamos que se autoreferencie
-  if (targets.includes(idxMeta)) {
-    targets = [2, 3]; // en ese caso referenciamos las otras dos
-  }
-
-  barajadas[idxMeta] = `${letra(targets[0])}) y ${letra(targets[1])}) son correctas.`;
+  // Reescribir la opción meta con las letras reales
+  barajadas[idxMeta] = `${letra(idxDiplomacia)}) y ${letra(idxRetribuciones)}) son correctas.`;
 
   return {
     tema: "EOFAS",
-    modelos: ["A"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
     prompt: "A la Secretaría General de Política de Defensa le corresponde:",
     options: barajadas,
-    correct: [0] // ⚠️ cámbialo a mano según cuál/es sean las correctas
+    correct: [0] // ⚠️ cámbialo según cuál/es la correcta
   };
 }
 
@@ -424,7 +419,7 @@ function eofas_4(){
 function eofas_5(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
     prompt: "El órgano encargado de dirigir la elaboración de los tratados internacionales que afecten a la Defensa es:",
@@ -442,7 +437,7 @@ function eofas_5(){
 function eofas_6(){
   return {
     tema: "EOFAS",
-    modelos: ["A"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
     prompt: "Al Jefe de Estado Mayor de la Defensa le corresponde:",
@@ -460,7 +455,7 @@ function eofas_6(){
 function eofas_7(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
     prompt: "El órgano auxiliar de mando del JEMAD que apoya y asesora en la definición de la estrategia militares:",
@@ -488,7 +483,7 @@ function eofas_8(){
 
   const letra = (i) => String.fromCharCode(97 + i);
 
-  // Localizar los índices de las dos opciones que la meta debe señalar
+  // Localizar las dos opciones que debe referenciar la meta
   const idxArmamento = barajadas.indexOf("Dirigir la política de armamento, en relación con organismos internacionales");
   const idxEjercer = barajadas.indexOf("Ejercer bajo la dependencia del Presidente del Gobierno el mando de la estructura operativa de las Fuerzas Armadas");
 
@@ -497,12 +492,12 @@ function eofas_8(){
 
   return {
     tema: "EOFAS",
-    modelos: ["A"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
     prompt: "Al Jefe de Estado Mayor de la Defensa le corresponde:",
     options: barajadas,
-    correct: [1] // ⚠️ cambia este índice según la/s correcta/s
+    correct: [1] // ⚠️ cambia este índice según cuál/es sean correctas
   };
 }
 
@@ -511,15 +506,15 @@ function eofas_8(){
 function eofas_9(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "El órgano encargado de realizar las expropiaciones de bienes y derechos así como los arrendamientos pertinentes es: La DIGENECO",
+    prompt: "El órgano encargado de realizar las expropiaciones de bienes y derechos así como los arrendamientos pertinentes es:",
     options: [
       "La DIGENIN",
       "La DGAM",
       "La DIGENPER.",
-      "—"
+      "La DIGENECO"
     ],
     correct: [0] // ⚠️ Marcar luego la correcta manualmente
   };
@@ -527,82 +522,85 @@ function eofas_9(){
 
 
 function eofas_10(){
-  // Opciones base (sin letras). La meta se marca con un placeholder.
   const base = [
     "Es un mando conjunto de la estructura operativa constituido de forma permanente",
     "Tiene como misión la intervención en cualquier lugar del territorio nacional exclusivamente",
-    "__META__", // ← se sustituirá por "b) y c) son correctas" (ajustado)
+    "__META__", // se convertirá en "b) y c) son correctas."
     "El JEMAD dictará las normas que regulen su organización"
   ];
 
-  // Barajar
   const barajadas = shuffle(base);
-
-  // Índice de la opción meta
   const idxMeta = barajadas.indexOf("__META__");
 
-  // Función para obtener letra por índice 0→a,1→b,2→c,3→d
   const letra = (i) => String.fromCharCode(97 + i);
 
-  // Objetivo por defecto: referenciar B y C (índices 1 y 2)
-  let targets = [1, 2];
+  // Localizar los índices de las dos opciones que la meta debe señalar
+  const idxMision = barajadas.indexOf("Tiene como misión la intervención en cualquier lugar del territorio nacional exclusivamente");
+  const idxJEMAD = barajadas.indexOf("El JEMAD dictará las normas que regulen su organización");
 
-  // Si la opción meta cae en B o C, evita autorreferencia → usa A y D
-  if (targets.includes(idxMeta)) {
-    targets = [0, 3];
-  }
-
-  // Reescritura del texto meta con las letras reales en pantalla
-  barajadas[idxMeta] = `${letra(targets[0])}) y ${letra(targets[1])}) son correctas.`;
+  // Reescribir el texto meta con las letras actuales
+  barajadas[idxMeta] = `${letra(idxMision)}) y ${letra(idxJEMAD)}) son correctas.`;
 
   return {
     tema: "EOFAS",
-    modelos: ["A"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "La UME",
+    prompt: "La UME:",
     options: barajadas,
-    // ⚠️ Ajusta tú la(s) correcta(s). Si quieres que la meta sea la correcta:
-    // correct: [idxMeta],
-    correct: [0]
+    correct: [0] // ⚠️ cámbialo según cuál/es sean las correctas
   };
 }
-
 
 
 
 function eofas_11(){
+  const base = [
+    "Desarrollar la política medioambiental del Departamento",
+    "Administrar los recursos financieros destinados a las operaciones de paz",
+    "__META__", // se convertirá en "a) y c) son correctas."
+    "Dirigir la gestión de los bienes afectos al Ministerio de Defensa"
+  ];
+
+  const barajadas = shuffle(base);
+  const idxMeta = barajadas.indexOf("__META__");
+
+  const letra = (i) => String.fromCharCode(97 + i);
+
+  // Localizar los índices de las dos opciones que debe señalar la meta
+  const idxMedioambiente = barajadas.indexOf("Desarrollar la política medioambiental del Departamento");
+  const idxBienes = barajadas.indexOf("Dirigir la gestión de los bienes afectos al Ministerio de Defensa");
+
+  // Reescribir el texto meta con las letras actuales
+  barajadas[idxMeta] = `${letra(idxMedioambiente)}) y ${letra(idxBienes)}) son correctas.`;
+
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "A la DIGENECO le corresponde: Dirigir la gestión de los bienes afectos al Ministerio de Defensa",
-    options: [
-      "Desarrollar la política medioambiental del Departamento",
-      "Administrar los recursos financieros destinados a las operaciones de paz",
-      "a) y c) son correctas.",
-      "—"
-    ],
-    correct: [0] // ⚠️ Marcar luego la correcta manualmente
+    prompt: "A la DIGENECO le corresponde:",
+    options: barajadas,
+    correct: [1] // ⚠️ cámbialo según cuál/es sean correctas
   };
 }
+
 
 
 function eofas_12(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "El órgano encargado de llevar el inventario de los bienes del Ministerio de Defensa es: La Dirección General de Patrimonio e Inventario",
+    prompt: "El órgano encargado de llevar el inventario de los bienes del Ministerio de Defensa es:",
     options: [
       "La Secretaría de Estado de Defensa",
       "La Dirección General de Infraestructura",
       "La Subdirección General de Régimen Interior.",
-      "—"
+      "La Dirección General de Patrimonio e Inventario"
     ],
-    correct: [0] // ⚠️ Marcar luego la correcta manualmente
+    correct: [1] // ⚠️ Marcar luego la correcta manualmente
   };
 }
 
@@ -610,17 +608,17 @@ function eofas_12(){
 function eofas_13(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "El órgano encargado de gestionar los sistemas informáticos integrales de dirección y administración económica del Departamento es: DIGENIN",
+    prompt: "El órgano encargado de gestionar los sistemas informáticos integrales de dirección y administración económica del Departamento es:",
     options: [
       "La Subdirección General de Servicios Económicos y Pagadurías",
       "La SEGENTE",
       "DIGENECO.",
-      "—"
+      "DIGENIN"
     ],
-    correct: [0] // ⚠️ Marcar luego la correcta manualmente
+    correct: [2] // ⚠️ Marcar luego la correcta manualmente
   };
 }
 
@@ -628,17 +626,17 @@ function eofas_13(){
 function eofas_14(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "El órgano encargado de la dirección de las tecnologías y seguridad de la información en el ámbito de la defensa es: El JEMAD",
+    prompt: "El órgano encargado de la dirección de las tecnologías y seguridad de la información en el ámbito de la defensa es:",
     options: [
       "El Presidente del Gobierno",
       "La Junta de Defensa Nacional",
       "La SEDEF.",
-      "—"
+      "El JEMAD"
     ],
-    correct: [0] // ⚠️ Marcar luego la correcta manualmente
+    correct: [2] // ⚠️ Marcar luego la correcta manualmente
   };
 }
 
@@ -646,14 +644,14 @@ function eofas_14(){
 function eofas_15(){
   return {
     tema: "EOFAS",
-    modelos: ["A"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
     prompt: "El órgano encargado de proponer la política industrial de la defensa es:",
     options: [
       "La SUBDEF",
       "La DIGENECO",
-      "La DGAM.",
+      "La DGAM",
       "La DGAN"
     ],
     correct: [2] // ⚠️ Marcar luego la correcta manualmente
@@ -664,17 +662,17 @@ function eofas_15(){
 function eofas_16(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "El órgano encargado de la gestión de los servicios generales del órgano central es: La Subdirección General de Servicios",
+    prompt: "El órgano encargado de la gestión de los servicios generales del órgano central es:",
     options: [
       "La Secretaría General Técnica",
       "La Subdirección General de Régimen Interior",
       "La Subdirección General de Seguridad y Servicios.",
-      "—"
+      "La Subdirección General de Servicios"
     ],
-    correct: [0] // ⚠️ Marcar luego la correcta manualmente
+    correct: [1] // ⚠️ Marcar luego la correcta manualmente
   };
 }
 
@@ -682,7 +680,7 @@ function eofas_16(){
 function eofas_17(){
   return {
     tema: "EOFAS",
-    modelos: ["A"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
     prompt: "El órgano encargado de elaborar estudios e informes sobre cuántos asuntos sean sometidos a la deliberación del Consejo de Ministros es:",
@@ -700,15 +698,15 @@ function eofas_17(){
 function eofas_18(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "El órgano encargado del registro general en el órgano central en el Ministerio de Defensa es: La SUBDEF",
+    prompt: "El órgano encargado del registro general en el órgano central en el Ministerio de Defensa es:",
     options: [
       "La Subdirección General de Régimen Interior",
       "La SEGENTE",
       "La Subdirección General de Registro y Archivos.",
-      "—"
+      "La SUBDEF"
     ],
     correct: [0] // ⚠️ Marcar luego la correcta manualmente
   };
@@ -716,19 +714,33 @@ function eofas_18(){
 
 
 function eofas_19(){
+  const base = [
+    "Elaborar el BOD",
+    "Coordinar la política de igualdad",
+    "__META__", // se convertirá en "a) y c) son correctas."
+    "Proponer y elaborar normas sobre reformas de métodos de trabajo"
+  ];
+
+  const barajadas = shuffle(base);
+  const idxMeta = barajadas.indexOf("__META__");
+
+  const letra = (i) => String.fromCharCode(97 + i);
+
+  // Localizar índices de las opciones que la meta debe referenciar
+  const idxBOD = barajadas.indexOf("Elaborar el BOD");
+  const idxNormas = barajadas.indexOf("Proponer y elaborar normas sobre reformas de métodos de trabajo");
+
+  // Reescribir la opción meta con las letras reales
+  barajadas[idxMeta] = `${letra(idxBOD)}) y ${letra(idxNormas)}) son correctas.`;
+
   return {
     tema: "EOFAS",
-    modelos: ["A"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
     prompt: "A la DIGENPER le corresponde:",
-    options: [
-      "Elaborar el BOD",
-      "Coordinar la política de igualdad",
-      "a) y c) son correctas.",
-      "Proponer y elaborar normas sobre reformas de métodos de trabajo"
-    ],
-    correct: [1] // ⚠️ Marcar luego la correcta manualmente
+    options: barajadas,
+    correct: [1] // ⚠️ cámbialo según cuál/es la correcta
   };
 }
 
@@ -736,7 +748,7 @@ function eofas_19(){
 function eofas_20(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
     prompt: "A la SEGENTE le corresponde:",
@@ -754,17 +766,17 @@ function eofas_20(){
 function eofas_21(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "Marcar la respuesta incorrecta: A la DIGENPER le corresponde planificar los efectivos y el reclutamiento del personal militar",
+    prompt: "Marcar la respuesta incorrecta:",
     options: [
       "El Ejército de Tierra está constituido por el Cuartel General, la Fuerza y el Apoyo a la Fuerza",
       "A la DIGENPER le corresponde elaborar el régimen general de los centros docentes militares, del alumnado y del profesorado",
       "A la DIGENPER le corresponde reconocer los derechos pasivos y conceder las prestaciones de clases pasivas del personal militar.",
-      "—"
+      "A la DIGENPER le corresponde planificar los efectivos y el reclutamiento del personal militar"
     ],
-    correct: [0] // ⚠️ Marcar luego la correcta manualmente
+    correct: [1] // ⚠️ Marcar luego la correcta manualmente
   };
 }
 
@@ -772,15 +784,15 @@ function eofas_21(){
 function eofas_22(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "El órgano encargado de gestionar la formación para el personal civil es: La SEGENTE",
+    prompt: "El órgano encargado de gestionar la formación para el personal civil es:",
     options: [
       "La DIGENPER",
       "La DIGEREM",
       "La Subdirección General de Régimen Interior.",
-      "—"
+      "La SEGENTE"
     ],
     correct: [0] // ⚠️ Marcar luego la correcta manualmente
   };
@@ -790,17 +802,17 @@ function eofas_22(){
 function eofas_23(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "El órgano encargado de elaborar los planes de salidas profesionales del personal de las FAS es: La DIGEREM",
+    prompt: "El órgano encargado de elaborar los planes de salidas profesionales del personal de las FAS es:",
     options: [
       "La DIGENPER",
       "La Dirección General de Política de Defensa",
       "La DIGEREN.",
-      "—"
+      "La DIGEREM"
     ],
-    correct: [0] // ⚠️ Marcar luego la correcta manualmente
+    correct: [3] // ⚠️ Marcar luego la correcta manualmente
   };
 }
 
@@ -808,17 +820,17 @@ function eofas_23(){
 function eofas_24(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "El cargo de Inspector General de Sanidad será desempeñado por: Un General de División de cualquiera de los Ejércitos",
+    prompt: "El cargo de Inspector General de Sanidad será desempeñado por:",
     options: [
       "Un General de Brigada del Cuerpo Militar de Sanidad",
       "Un Oficial General de los Cuerpos Comunes",
       "Un General de División del Cuerpo Militar de Sanidad, en situación de servicio activo.",
-      "—"
+      "Un General de División de cualquiera de los Ejércitos"
     ],
-    correct: [0] // ⚠️ Marcar luego la correcta manualmente
+    correct: [2] // ⚠️ Marcar luego la correcta manualmente
   };
 }
 
@@ -826,17 +838,17 @@ function eofas_24(){
 function eofas_25(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "El Ejército de Tierra, la Armada y el Ejército del Aire están constituidos por: La Fuerza, la Logística y el Mando Supremo",
+    prompt: "El Ejército de Tierra, la Armada y el Ejército del Aire están constituidos por:",
     options: [
       "El Cuartel General, la Logística y el Apoyo a la Fuerza",
       "La Fuerza, el Apoyo a la Fuerza y el Cuartel General",
       "El Apoyo a la Fuerza, el Cuartel General y las Fuerzas Operativas.",
-      "—"
+      "La Fuerza, la Logística y el Mando Supremo"
     ],
-    correct: [0] // ⚠️ Marcar luego la correcta manualmente
+    correct: [1] // ⚠️ Marcar luego la correcta manualmente
   };
 }
 
@@ -844,7 +856,7 @@ function eofas_25(){
 function eofas_26(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
     prompt: "El Consejo Superior del Ejército del Aire es el órgano colegiado asesor y consultivo de:",
@@ -862,17 +874,17 @@ function eofas_26(){
 function eofas_27(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "El cargo de Secretario del CSEA será ejercido por: El Vocal de mayor antigüedad",
+    prompt: "El cargo de Secretario del CSEA será ejercido por:",
     options: [
       "El Vocal Accidental que se designe",
       "No existe el cargo de Secretario en el Consejo",
       "El Oficial General titular de la Secretaría Permanente del CSEA.",
-      "—"
+      "El Vocal de mayor antigüedad"
     ],
-    correct: [0] // ⚠️ Marcar luego la correcta manualmente
+    correct: [2] // ⚠️ Marcar luego la correcta manualmente
   };
 }
 
@@ -880,17 +892,17 @@ function eofas_27(){
 function eofas_28(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "Al General Jefe del MACOM en el Consejo le corresponderá ser: Vocal Nato",
+    prompt: "Al General Jefe del MACOM en el Consejo le corresponderá ser:",
     options: [
       "Vocal Accidental",
       "Vocal asesor",
       "Depende del tipo de reunión a realizar.",
-      "—"
+      "Vocal Nato"
     ],
-    correct: [0] // ⚠️ Marcar luego la correcta manualmente
+    correct: [3] // ⚠️ Marcar luego la correcta manualmente
   };
 }
 
@@ -898,17 +910,17 @@ function eofas_28(){
 function eofas_29(){
   return {
     tema: "EOFAS",
-    modelos: ["A","B","C","D","E"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "Al Consejo Superior del Ejército del Aire le corresponde: Asesorar al Ministro de Defensa en materias relativas a la estructuración del E.A",
+    prompt: "Al Consejo Superior del Ejército del Aire le corresponde:",
     options: [
       "Emitir informe sobre aquellos asuntos que someta a su consideración el JEMA",
       "Ser oído por el Ministro de Defensa en relación con su propuesta de designación del Jefe de Estado Mayor del Aire",
       "Todas las anteriores son correctas.",
-      "—"
+      "Asesorar al Ministro de Defensa en materias relativas a la estructuración del E.A"
     ],
-    correct: [0] // ⚠️ Marcar luego la correcta manualmente
+    correct: [2] // ⚠️ Marcar luego la correcta manualmente
   };
 }
 
@@ -916,7 +928,7 @@ function eofas_29(){
 function eofas_30(){
   return {
     tema: "EOFAS",
-    modelos: ["A"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
     prompt: "Las reuniones del Consejo Superior del Ejército del Aire serán convocadas por:",
@@ -934,7 +946,7 @@ function eofas_30(){
 function eofas_31(){
   return {
     tema: "EOFAS",
-    modelos: ["A"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
     prompt: "Es función del CSEA:",
@@ -952,7 +964,7 @@ function eofas_31(){
 function eofas_32(){
   return {
     tema: "EOFAS",
-    modelos: ["A"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
     prompt: "¿A que órgano le corresponde impartir los Altos Estudios de la Defensa Nacional?",
@@ -962,7 +974,7 @@ function eofas_32(){
       "Centro Superior de Estudios de la Defensa Nacional(CEDEDEN)",
       "Centro Universitario de la Defensa (CUD)."
     ],
-    correct: [0] // ⚠️ Marcar luego la correcta manualmente
+    correct: [1] // ⚠️ Marcar luego la correcta manualmente
   };
 }
 
@@ -970,22 +982,22 @@ function eofas_32(){
 function eofas_33(){
   return {
     tema: "EOFAS",
-    modelos: ["A"],
+    modelos: ["A","D"],
     repeatable: false,
     mode: "single",
-    prompt: "El organismo público dependiente directamente del titular del Departamento, y responsable de facilitar las informaciones, análisis, estudios o propuestas que permitan prevenir y evitar cualquier peligro, amenaza o agresión contra la independencia o integridad territorial de España, los intereses nacionales y la estabilidad del Estado de derecho y sus instituciones es: Centro Nacional de Inteligencia",
+    prompt: "El organismo público dependiente directamente del titular del Departamento, y responsable de facilitar las informaciones, análisis, estudios o propuestas que permitan prevenir y evitar cualquier peligro, amenaza o agresión contra la independencia o integridad territorial de España, los intereses nacionales y la estabilidad del Estado de derecho y sus instituciones es:",
     options: [
       "Dirección Institucional de Contrainteligencia de la Defensa",
       "Asesoría de Información y Riesgos del Ministerio de Defensa",
       "Subdirección de Análisis e Información de la Defensa.",
-      "—"
+      "Centro Nacional de Inteligencia"
     ],
-    correct: [0] // ⚠️ Marcar luego la correcta manualmente
+    correct: [3] // ⚠️ Marcar luego la correcta manualmente
   };
 }
 
-REGISTRY.types["constitucion"] = {
-    name: "Constitución",
+REGISTRY.types["eofas"] = {
+    name: "EOFAS",
     templates: [
 eofas_1,
 eofas_2,
