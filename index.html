@@ -64,7 +64,7 @@
   <div class="spacer"></div>
 <!-- 🔹 NUEVO BLOQUE DE SELECCIÓN EN CASCADA -->
   <div class="row row-3" id="fila-eat">
-  <div id="bloque-esp">
+  <div id="bloque-esp" class="hide">
     <label for="especialidad">Especialidad</label>
     <select id="especialidad">
       <option value="">-- Selecciona especialidad --</option>
@@ -77,13 +77,13 @@
       <option value="PAO">PAO</option>
     </select>
   </div>
-  <div id="bloque-asig">
+  <div id="bloque-asig" class="hide">
     <label for="asignatura">Asignatura</label>
     <select id="asignatura" disabled>
       <option value="">-- Selecciona asignatura --</option>
     </select>
   </div>
-  <div id="bloque-tema">
+  <div id="bloque-tema" class="hide">
     <label for="tema">Tema</label>
     <select id="tema" disabled>
       <option value="">-- Selecciona tema --</option>
@@ -93,7 +93,7 @@
 
   <div class="spacer"></div>
   <!-- 🔹 FIN DEL BLOQUE NUEVO -->
-    <div class="row row-1">
+    <div class="row row-1 hide">
   <div>
     <label for="modo">Modo de juego</label>
     <select id="modo">
@@ -109,7 +109,7 @@
   <div class="spacer"></div>
   <!-- 🔹 PASO FINAL: MODELO -->
   <div class="spacer"></div>
-  <div class="row row-1">
+  <div class="row row-1 hide">
     <div>
       <label for="modelo">Modelo</label>
       <select id="modelo">
@@ -178,140 +178,236 @@ const REGISTRY = { types: {} };
 /* ========== TIPO: CONSTITUCIÓN (ejemplo) ========== */
 // constitucion.js - TODAS LAS PLANTILLAS TRADUCIDAS DESDE Constitucion_prime.py
 
-(function registerAritmetica(){
-  function suma_basica(){
-    const a = rndInt(1,1000);
-    const b = rndInt(1,1000);
+(function registerAritmetica() {
+
+  function suma_basica() {
+    const a = rndInt(1, 1000);
+    const b = rndInt(1, 1000);
     const correct = a + b;
 
-    function generarDistractores(correct){
+    function generarDistractores(correct) {
       const distractores = new Set();
-      while (distractores.size < 3){
+      while (distractores.size < 3) {
         let delta;
-        if (Math.random() < 0.8){
-          delta = rndInt(-9,9);
+        if (Math.random() < 0.8) {
+          delta = rndInt(-9, 9);
           if (delta === 0) continue;
         } else {
           delta = Math.random() < 0.5 ? -10 : 10;
         }
         const valor = correct + delta;
-        if (valor !== correct && !distractores.has(valor)){
+        if (valor !== correct && !distractores.has(valor)) {
           distractores.add(valor);
         }
       }
       return Array.from(distractores);
     }
 
-    const distractores = generarDistractores(correct);
-    const options = shuffle([correct, ...distractores]);
+    const opcionesNum = shuffle([correct, ...generarDistractores(correct)]);
+    const opciones = opcionesNum.map(String);
+    const correctIdx = opciones.indexOf(String(correct));
 
     return {
       tema: "Aritmética",
-      modelos: ["B","D"],
+      modelos: ["B", "D"],
       repeatable: true,
-      mode:"single",
-      prompt:`¿Cuánto es ${a} + ${b}?`,
-      options: options.map(String),
-      correct:[options.indexOf(correct)]
+      mode: "single",
+      prompt: `¿Cuánto es ${a} + ${b}?`,
+      options: opciones,
+      correct: [correctIdx]
     };
   }
 
-  function multiplicacion_basica(){
+  function multiplicacion_basica() {
     let a, b;
-    const tipo = rndInt(1,3);
-    if (tipo === 1){
-      a = rndInt(1,9);
-      b = rndInt(1,9);
-    } else if (tipo === 2){
-      if (Math.random() < 0.5){
-        a = rndInt(1,9);
-        b = rndInt(10,99);
+    const tipo = rndInt(1, 3);
+
+    function generarNumero(baseMin, baseMax) {
+      let num = rndInt(baseMin, baseMax);
+      const r = Math.random();
+      if (r < 0.7) {
+        num = parseFloat((num + Math.random()).toFixed(1)); // 1 decimal
       } else {
-        a = rndInt(10,99);
-        b = rndInt(1,9);
+        num = parseFloat((num + Math.random()).toFixed(2)); // 2 decimales
+      }
+      return num;
+    }
+
+    if (tipo === 1) {
+      a = generarNumero(1, 9);
+      b = generarNumero(1, 9);
+    } else if (tipo === 2) {
+      if (Math.random() < 0.5) {
+        a = generarNumero(2, 9);
+        b = generarNumero(10, 99);
+      } else {
+        a = generarNumero(10, 99);
+        b = generarNumero(2, 9);
       }
     } else {
-      a = rndInt(10,99);
-      b = rndInt(10,99);
+      a = generarNumero(10, 99);
+      b = generarNumero(10, 99);
     }
 
-    const correct = a * b;
+    const correct = parseFloat((a * b).toFixed(2)); // hasta 2 decimales
 
-    function generarDistractores(correct){
+    function generarDistractores(correct) {
       const distractores = new Set();
-      while (distractores.size < 3){
+      while (distractores.size < 3) {
         let delta;
-        if (Math.random() < 0.8){
-          delta = rndInt(-9,9);
+        if (Math.random() < 0.8) {
+          delta = rndInt(-9, 9);
           if (delta === 0) continue;
         } else {
           delta = Math.random() < 0.5 ? -10 : 10;
         }
-        const valor = correct + delta;
-        if (valor !== correct && !distractores.has(valor)){
+        let valor = correct + delta;
+        // Mantener formato si el correcto tiene decimales
+        if (String(correct).includes(".")) {
+          valor = parseFloat(valor.toFixed(2));
+        }
+        if (valor !== correct && !distractores.has(valor)) {
           distractores.add(valor);
         }
       }
       return Array.from(distractores);
     }
 
-    const distractores = generarDistractores(correct);
-    const options = shuffle([correct, ...distractores]);
+    const opcionesNum = shuffle([correct, ...generarDistractores(correct)]);
+    const opciones = opcionesNum.map(String);
+    const correctIdx = opciones.indexOf(String(correct));
 
     return {
       tema: "Aritmética",
-      modelos: ["B","D"],
+      modelos: ["B", "D"],
       repeatable: true,
-      mode:"single",
-      prompt:`¿Cuánto es ${a} × ${b}?`,
-      options: options.map(String),
-      correct:[options.indexOf(correct)]
+      mode: "single",
+      prompt: `¿Cuánto es ${a} × ${b}?`,
+      options: opciones,
+      correct: [correctIdx]
     };
   }
 
-  function resta_basica(){
-    const a = rndInt(1,1000);
-    const b = rndInt(1,1000);
+  function resta_basica() {
+    const a = rndInt(1, 1000);
+    const b = rndInt(1, 1000);
     const correct = a - b;
 
-    function generarDistractores(correct){
+    function generarDistractores(correct) {
       const distractores = new Set();
-      while (distractores.size < 3){
+      while (distractores.size < 3) {
         let delta;
-        if (Math.random() < 0.8){
-          delta = rndInt(-9,9);
+        if (Math.random() < 0.8) {
+          delta = rndInt(-9, 9);
           if (delta === 0) continue;
         } else {
           delta = Math.random() < 0.5 ? -10 : 10;
         }
         const valor = correct + delta;
-        if (valor !== correct && !distractores.has(valor)){
+        if (valor !== correct && !distractores.has(valor)) {
           distractores.add(valor);
         }
       }
       return Array.from(distractores);
     }
 
-    const distractores = generarDistractores(correct);
-    const options = shuffle([correct, ...distractores]);
+    const opcionesNum = shuffle([correct, ...generarDistractores(correct)]);
+    const opciones = opcionesNum.map(String);
+    const correctIdx = opciones.indexOf(String(correct));
 
     return {
       tema: "Aritmética",
-      modelos: ["B","D"],
+      modelos: ["B", "D"],
       repeatable: true,
-      mode:"single",
-      prompt:`¿Cuánto es ${a} - ${b}?`,
-      options: options.map(String),
-      correct:[options.indexOf(correct)]
+      mode: "single",
+      prompt: `¿Cuánto es ${a} - ${b}?`,
+      options: opciones,
+      correct: [correctIdx]
+    };
+  }
+
+  function division_basica() {
+    let a, b;
+    const tipo = rndInt(1, 3);
+
+    function generarNumero(baseMin, baseMax) {
+      let num = rndInt(baseMin, baseMax);
+      const r = Math.random();
+      if (r < 0.7) {
+        num = parseFloat((num + Math.random()).toFixed(1)); // 1 decimal
+      } else {
+        num = parseFloat((num + Math.random()).toFixed(2)); // 2 decimales
+      }
+      return num;
+    }
+
+    if (tipo === 1) {
+      a = generarNumero(1, 9);
+      b = generarNumero(1, 9);
+    } else if (tipo === 2) {
+      if (Math.random() < 0.5) {
+        a = generarNumero(2, 9);
+        b = generarNumero(10, 99);
+      } else {
+        a = generarNumero(10, 99);
+        b = generarNumero(2, 9);
+      }
+    } else {
+      a = generarNumero(10, 99);
+      b = generarNumero(10, 99);
+    }
+
+    if (b === 0) b = 1; // salvaguarda (no debería ocurrir con los rangos)
+
+    const correct = parseFloat((a / b).toFixed(2));
+
+    function generarDistractores(correct) {
+      const distractores = new Set();
+      while (distractores.size < 3) {
+        let delta;
+        if (Math.random() < 0.8) {
+          delta = (Math.random() < 0.5 ? -1 : 1) * (Math.random() * 3); // ± hasta 3
+        } else {
+          delta = (Math.random() < 0.5 ? -1 : 1) * 5; // saltos grandes
+        }
+        let valor = correct + delta;
+        valor = parseFloat(valor.toFixed(2));
+        if (valor !== correct && !distractores.has(valor)) {
+          distractores.add(valor);
+        }
+      }
+      return Array.from(distractores);
+    }
+
+    const opcionesNum = shuffle([correct, ...generarDistractores(correct)]);
+    const opciones = opcionesNum.map(String);
+    const correctIdx = opciones.indexOf(String(correct));
+
+    return {
+      tema: "Aritmética",
+      modelos: ["B", "D"],
+      repeatable: true,
+      mode: "single",
+      prompt: `¿Cuánto es ${a} ÷ ${b}?`,
+      options: opciones,
+      correct: [correctIdx]
     };
   }
 
   REGISTRY.types["matematicas_aritmetica"] = {
     name: "Aritmética",
-    templates: [suma_basica, resta_basica, multiplicacion_basica]
+    templates: [suma_basica, resta_basica, multiplicacion_basica, division_basica]
   };
+
 })();
+
+
+
+
+
+
 REGISTRY.types['teoria_electrones'] = { name: 'Teoría de los electrones', templates: [configuracion_electronica,pregunta_teoria_de_los_electrones_1,pregunta_teoria_de_los_electrones_2,pregunta_teoria_de_los_electrones_3,pregunta_teoria_de_los_electrones_4,pregunta_teoria_de_los_electrones_5,pregunta_teoria_de_los_electrones_6,pregunta_teoria_de_los_electrones_7,pregunta_teoria_de_los_electrones_8,pregunta_teoria_de_los_electrones_9,pregunta_teoria_de_los_electrones_10,pregunta_teoria_de_los_electrones_11,pregunta_teoria_de_los_electrones_12,pregunta_teoria_de_los_electrones_13,pregunta_teoria_de_los_electrones_14,pregunta_teoria_de_los_electrones_15,pregunta_teoria_de_los_electrones_16,pregunta_teoria_de_los_electrones_17,pregunta_teoria_de_los_electrones_18,pregunta_teoria_de_los_electrones_19,pregunta_teoria_de_los_electrones_20,pregunta_teoria_de_los_electrones_21,pregunta_teoria_de_los_electrones_22,pregunta_teoria_de_los_electrones_23,pregunta_teoria_de_los_electrones_24,pregunta_teoria_de_los_electrones_25]};
+REGISTRY.types['electricidad_estatica'] = { name: 'Electricidad estática y conducción', templates: [(typeof pregunta_electricidad_estatica_1 !== 'undefined' ? pregunta_electricidad_estatica_1 : null),(typeof pregunta_electricidad_estatica_2 !== 'undefined' ? pregunta_electricidad_estatica_2 : null),(typeof pregunta_electricidad_estatica_3 !== 'undefined' ? pregunta_electricidad_estatica_3 : null),(typeof pregunta_electricidad_estatica_4 !== 'undefined' ? pregunta_electricidad_estatica_4 : null),(typeof pregunta_electricidad_estatica_5 !== 'undefined' ? pregunta_electricidad_estatica_5 : null),(typeof pregunta_electricidad_estatica_6 !== 'undefined' ? pregunta_electricidad_estatica_6 : null),(typeof pregunta_electricidad_estatica_7 !== 'undefined' ? pregunta_electricidad_estatica_7 : null),(typeof pregunta_electricidad_estatica_8 !== 'undefined' ? pregunta_electricidad_estatica_8 : null),(typeof pregunta_electricidad_estatica_9 !== 'undefined' ? pregunta_electricidad_estatica_9 : null),(typeof pregunta_electricidad_estatica_10 !== 'undefined' ? pregunta_electricidad_estatica_10 : null),(typeof pregunta_electricidad_estatica_11 !== 'undefined' ? pregunta_electricidad_estatica_11 : null),(typeof pregunta_electricidad_estatica_12 !== 'undefined' ? pregunta_electricidad_estatica_12 : null),(typeof pregunta_electricidad_estatica_13 !== 'undefined' ? pregunta_electricidad_estatica_13 : null),(typeof pregunta_electricidad_estatica_14 !== 'undefined' ? pregunta_electricidad_estatica_14 : null),(typeof pregunta_electricidad_estatica_15 !== 'undefined' ? pregunta_electricidad_estatica_15 : null),(typeof pregunta_electricidad_estatica_16 !== 'undefined' ? pregunta_electricidad_estatica_16 : null),(typeof pregunta_electricidad_estatica_17 !== 'undefined' ? pregunta_electricidad_estatica_17 : null),(typeof pregunta_electricidad_estatica_18 !== 'undefined' ? pregunta_electricidad_estatica_18 : null),(typeof pregunta_electricidad_estatica_19 !== 'undefined' ? pregunta_electricidad_estatica_19 : null),(typeof pregunta_electricidad_estatica_20 !== 'undefined' ? pregunta_electricidad_estatica_20 : null),(typeof pregunta_electricidad_estatica_21 !== 'undefined' ? pregunta_electricidad_estatica_21 : null),(typeof pregunta_electricidad_estatica_22 !== 'undefined' ? pregunta_electricidad_estatica_22 : null),(typeof pregunta_electricidad_estatica_23 !== 'undefined' ? pregunta_electricidad_estatica_23 : null),(typeof pregunta_electricidad_estatica_24 !== 'undefined' ? pregunta_electricidad_estatica_24 : null),(typeof pregunta_electricidad_estatica_25 !== 'undefined' ? pregunta_electricidad_estatica_25 : null),(typeof generarPreguntaCoulomb !== 'undefined' ? generarPreguntaCoulomb : null)].filter(Boolean)};
 
 (function registerEOFAS(){
   function eofas_1(){
@@ -1046,698 +1142,15 @@ eofas_33
     const anio = anios[idx], persona = personas[idx];
     const distractores = personas.filter(p=>p!==persona).sort(()=>Math.random()-0.5).slice(0,3);
     const options = [persona,...distractores].sort(()=>Math.random()-0.5);
-    return { mode:"single", prompt:`La Constitución de ${anio} fue entregada por:`, options, correct:[options.indexOf(persona)] };
+    return { modelos:["A","B","C","D","E"], mode:"single", prompt:`La Constitución de ${anio} fue entregada por:`, options, correct:[options.indexOf(persona)] };
   }
 
   
-  function t_constitucion_anio(){
-    const anios = [1808,1837,1845,1869,1876];
-    const personas = ["Napoleón","María Cristina de Borbón","Isabel II","General Francisco Serrano","Alfonso XII"];
-    const idx = Math.floor(Math.random()*personas.length);
-    const persona = personas[idx], anio = anios[idx];
-    const distractores = anios.filter(a=>a!==anio).sort(()=>Math.random()-0.5).slice(0,3);
-    const options = [anio,...distractores].map(String).sort(()=>Math.random()-0.5);
-    return { mode:"single", prompt:`La Constitución entregada por ${persona} es del año:`, options, correct:[options.indexOf(String(anio))] };
-  };
-
-  
-  function t_caracteristica(){
-    const caracteristicas = {1812:"Soberanía nacional",1837:"Avance liberal",1845:"Moderada",1869:"Democrática"};
-    const anios = Object.keys(caracteristicas);
-    const idx = Math.floor(Math.random()*anios.length);
-    const anio = anios[idx], caracter = caracteristicas[anio];
-    const distractores = Object.values(caracteristicas).filter(c=>c!==caracter).sort(()=>Math.random()-0.5).slice(0,3);
-    const options = [caracter,...distractores].sort(()=>Math.random()-0.5);
-    return { mode:"single", prompt:`Una característica de la Constitución de ${anio} es:`, options, correct:[options.indexOf(caracter)] };
-  };
-
-  
-  function t_titulo(){
-    const titulos = {1:"De los derechos y deberes",2:"De la Corona",3:"De las Cortes Generales"};
-    const num = Object.keys(titulos);
-    const idx = Math.floor(Math.random()*num.length);
-    const n = num[idx], titulo = titulos[n];
-    const distractores = Object.values(titulos).filter(t=>t!==titulo).sort(()=>Math.random()-0.5).slice(0,3);
-    const options = [titulo,...distractores].sort(()=>Math.random()-0.5);
-    return { mode:"single", prompt:`¿Qué regula el Título ${n} de la Constitución?`, options, correct:[options.indexOf(titulo)] };
-  };
-
-  function t_no_caract_actual() {
-    // TODO: traducir la lógica de inst_pregunta_no_caract_actual desde Python
-    return {
-      mode: "single",
-      prompt: "t_no_caract_actual — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_articulos() {
-    // TODO: traducir la lógica de inst_pregunta_articulos desde Python
-    return {
-      mode: "single",
-      prompt: "t_articulos — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_tipo_derecho() {
-    // TODO: traducir la lógica de inst_pregunta_tipo_derecho desde Python
-    return {
-      mode: "single",
-      prompt: "t_tipo_derecho — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_deberes() {
-    // TODO: traducir la lógica de inst_pregunta_deberes desde Python
-    return {
-      mode: "single",
-      prompt: "t_deberes — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_promulgacion() {
-    // TODO: traducir la lógica de inst_pregunta_promulgacion desde Python
-    return {
-      mode: "single",
-      prompt: "t_promulgacion — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_periodo_franquista() {
-    // TODO: traducir la lógica de inst_pregunta_periodo_franquista desde Python
-    return {
-      mode: "single",
-      prompt: "t_periodo_franquista — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_pena_muerte() {
-    // TODO: traducir la lógica de inst_pregunta_pena_muerte desde Python
-    return {
-      mode: "single",
-      prompt: "t_pena_muerte — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_defender_espana() {
-    // TODO: traducir la lógica de inst_pregunta_defender_espana desde Python
-    return {
-      mode: "single",
-      prompt: "t_defender_espana — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_servicio_civil() {
-    // TODO: traducir la lógica de inst_pregunta_servicio_civil desde Python
-    return {
-      mode: "single",
-      prompt: "t_servicio_civil — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_estado_excepcion() {
-    // TODO: traducir la lógica de inst_pregunta_estado_excepcion desde Python
-    return {
-      mode: "single",
-      prompt: "t_estado_excepcion — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_medioambiente() {
-    // TODO: traducir la lógica de inst_pregunta_medioambiente desde Python
-    return {
-      mode: "single",
-      prompt: "t_medioambiente — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_certificacion_medioambiente() {
-    // TODO: traducir la lógica de inst_pregunta_certificacion_medioambiente desde Python
-    return {
-      mode: "single",
-      prompt: "t_certificacion_medioambiente — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_sga() {
-    // TODO: traducir la lógica de inst_pregunta_sga desde Python
-    return {
-      mode: "single",
-      prompt: "t_sga — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_normativa_medioambiente() {
-    // TODO: traducir la lógica de inst_pregunta_normativa_medioambiente desde Python
-    return {
-      mode: "single",
-      prompt: "t_normativa_medioambiente — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_politica_medioambiental() {
-    // TODO: traducir la lógica de inst_pregunta_politica_medioambiental desde Python
-    return {
-      mode: "single",
-      prompt: "t_politica_medioambiental — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_funciones_rey() {
-    // TODO: traducir la lógica de inst_pregunta_funciones_rey desde Python
-    return {
-      mode: "single",
-      prompt: "t_funciones_rey — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_abdicacion() {
-    // TODO: traducir la lógica de inst_pregunta_abdicacion desde Python
-    return {
-      mode: "single",
-      prompt: "t_abdicacion — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_regencia() {
-    // TODO: traducir la lógica de inst_pregunta_regencia desde Python
-    return {
-      mode: "single",
-      prompt: "t_regencia — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_tutela() {
-    // TODO: traducir la lógica de inst_pregunta_tutela desde Python
-    return {
-      mode: "single",
-      prompt: "t_tutela — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_cortes_poder() {
-    // TODO: traducir la lógica de inst_pregunta_cortes_poder desde Python
-    return {
-      mode: "single",
-      prompt: "t_cortes_poder — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_cortes_autonomia() {
-    // TODO: traducir la lógica de inst_pregunta_cortes_autonomia desde Python
-    return {
-      mode: "single",
-      prompt: "t_cortes_autonomia — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_cortes_circunscripciones() {
-    // TODO: traducir la lógica de inst_pregunta_cortes_circunscripciones desde Python
-    return {
-      mode: "single",
-      prompt: "t_cortes_circunscripciones — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_cortes_mesa() {
-    // TODO: traducir la lógica de inst_pregunta_cortes_mesa desde Python
-    return {
-      mode: "single",
-      prompt: "t_cortes_mesa — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_cortes_decretos() {
-    // TODO: traducir la lógica de inst_pregunta_cortes_decretos desde Python
-    return {
-      mode: "single",
-      prompt: "t_cortes_decretos — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_gobierno_responsabilidad_penal() {
-    // TODO: traducir la lógica de inst_pregunta_gobierno_responsabilidad_penal desde Python
-    return {
-      mode: "single",
-      prompt: "t_gobierno_responsabilidad_penal — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_gobierno_investidura() {
-    // TODO: traducir la lógica de inst_pregunta_gobierno_investidura desde Python
-    return {
-      mode: "single",
-      prompt: "t_gobierno_investidura — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_gobierno_vicepresidente() {
-    // TODO: traducir la lógica de inst_pregunta_gobierno_vicepresidente desde Python
-    return {
-      mode: "single",
-      prompt: "t_gobierno_vicepresidente — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_gobierno_organo_consultivo() {
-    // TODO: traducir la lógica de inst_pregunta_gobierno_organo_consultivo desde Python
-    return {
-      mode: "single",
-      prompt: "t_gobierno_organo_consultivo — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_gobierno_responsabilidad_politica() {
-    // TODO: traducir la lógica de inst_pregunta_gobierno_responsabilidad_politica desde Python
-    return {
-      mode: "single",
-      prompt: "t_gobierno_responsabilidad_politica — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_relaciones_responsabilidad() {
-    // TODO: traducir la lógica de inst_pregunta_relaciones_responsabilidad desde Python
-    return {
-      mode: "single",
-      prompt: "t_relaciones_responsabilidad — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_relaciones_interpelaciones() {
-    // TODO: traducir la lógica de inst_pregunta_relaciones_interpelaciones desde Python
-    return {
-      mode: "single",
-      prompt: "t_relaciones_interpelaciones — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_relaciones_mocion_censura() {
-    // TODO: traducir la lógica de inst_pregunta_relaciones_mocion_censura desde Python
-    return {
-      mode: "single",
-      prompt: "t_relaciones_mocion_censura — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_relaciones_cuestion_confianza() {
-    // TODO: traducir la lógica de inst_pregunta_relaciones_cuestion_confianza desde Python
-    return {
-      mode: "single",
-      prompt: "t_relaciones_cuestion_confianza — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_relaciones_delegacion() {
-    // TODO: traducir la lógica de inst_pregunta_relaciones_delegacion desde Python
-    return {
-      mode: "single",
-      prompt: "t_relaciones_delegacion — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_judicial_independencia() {
-    // TODO: traducir la lógica de inst_pregunta_judicial_independencia desde Python
-    return {
-      mode: "single",
-      prompt: "t_judicial_independencia — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_judicial_cgpj() {
-    // TODO: traducir la lógica de inst_pregunta_judicial_cgpj desde Python
-    return {
-      mode: "single",
-      prompt: "t_judicial_cgpj — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_judicial_tribunal_supremo() {
-    // TODO: traducir la lógica de inst_pregunta_judicial_tribunal_supremo desde Python
-    return {
-      mode: "single",
-      prompt: "t_judicial_tribunal_supremo — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_judicial_ministerio_fiscal() {
-    // TODO: traducir la lógica de inst_pregunta_judicial_ministerio_fiscal desde Python
-    return {
-      mode: "single",
-      prompt: "t_judicial_ministerio_fiscal — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_judicial_inalienable() {
-    // TODO: traducir la lógica de inst_pregunta_judicial_inalienable desde Python
-    return {
-      mode: "single",
-      prompt: "t_judicial_inalienable — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_economia_potestad() {
-    // TODO: traducir la lógica de inst_pregunta_economia_potestad desde Python
-    return {
-      mode: "single",
-      prompt: "t_economia_potestad — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_economia_presupuestos() {
-    // TODO: traducir la lógica de inst_pregunta_economia_presupuestos desde Python
-    return {
-      mode: "single",
-      prompt: "t_economia_presupuestos — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_economia_principios() {
-    // TODO: traducir la lógica de inst_pregunta_economia_principios desde Python
-    return {
-      mode: "single",
-      prompt: "t_economia_principios — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_economia_tribunal_cuentas() {
-    // TODO: traducir la lógica de inst_pregunta_economia_tribunal_cuentas desde Python
-    return {
-      mode: "single",
-      prompt: "t_economia_tribunal_cuentas — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_economia_articulo128() {
-    // TODO: traducir la lógica de inst_pregunta_economia_articulo128 desde Python
-    return {
-      mode: "single",
-      prompt: "t_economia_articulo128 — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_territorial_estado() {
-    // TODO: traducir la lógica de inst_pregunta_territorial_estado desde Python
-    return {
-      mode: "single",
-      prompt: "t_territorial_estado — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_territorial_autonomia() {
-    // TODO: traducir la lógica de inst_pregunta_territorial_autonomia desde Python
-    return {
-      mode: "single",
-      prompt: "t_territorial_autonomia — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_territorial_municipio() {
-    // TODO: traducir la lógica de inst_pregunta_territorial_municipio desde Python
-    return {
-      mode: "single",
-      prompt: "t_territorial_municipio — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_territorial_provincia() {
-    // TODO: traducir la lógica de inst_pregunta_territorial_provincia desde Python
-    return {
-      mode: "single",
-      prompt: "t_territorial_provincia — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_territorial_solidaridad() {
-    // TODO: traducir la lógica de inst_pregunta_territorial_solidaridad desde Python
-    return {
-      mode: "single",
-      prompt: "t_territorial_solidaridad — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_tc_funcion() {
-    // TODO: traducir la lógica de inst_pregunta_tc_funcion desde Python
-    return {
-      mode: "single",
-      prompt: "t_tc_funcion — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_tc_composicion() {
-    // TODO: traducir la lógica de inst_pregunta_tc_composicion desde Python
-    return {
-      mode: "single",
-      prompt: "t_tc_composicion — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_tc_mandato() {
-    // TODO: traducir la lógica de inst_pregunta_tc_mandato desde Python
-    return {
-      mode: "single",
-      prompt: "t_tc_mandato — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_tc_recursos() {
-    // TODO: traducir la lógica de inst_pregunta_tc_recursos desde Python
-    return {
-      mode: "single",
-      prompt: "t_tc_recursos — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_tc_conflictos() {
-    // TODO: traducir la lógica de inst_pregunta_tc_conflictos desde Python
-    return {
-      mode: "single",
-      prompt: "t_tc_conflictos — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_reforma_tituloX() {
-    // TODO: traducir la lógica de inst_pregunta_reforma_tituloX desde Python
-    return {
-      mode: "single",
-      prompt: "t_reforma_tituloX — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_reforma_total() {
-    // TODO: traducir la lógica de inst_pregunta_reforma_total desde Python
-    return {
-      mode: "single",
-      prompt: "t_reforma_total — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_reforma_ordinaria() {
-    // TODO: traducir la lógica de inst_pregunta_reforma_ordinaria desde Python
-    return {
-      mode: "single",
-      prompt: "t_reforma_ordinaria — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_reforma_dos_tercios() {
-    // TODO: traducir la lógica de inst_pregunta_reforma_dos_tercios desde Python
-    return {
-      mode: "single",
-      prompt: "t_reforma_dos_tercios — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
-
-  function t_reforma_referendum() {
-    // TODO: traducir la lógica de inst_pregunta_reforma_referendum desde Python
-    return {
-      mode: "single",
-      prompt: "t_reforma_referendum — pendiente de traducción",
-      options: ["A","B","C","D"],
-      correct: [0]
-    };
-  }
 
   REGISTRY.types["constitucion"] = {
     name: "Constitución",
     templates: [
-t_constitucion,
-t_constitucion_anio,
-t_caracteristica,
-t_titulo,
-t_no_caract_actual,
-t_articulos,
-t_tipo_derecho,
-t_deberes,
-t_promulgacion,
-t_periodo_franquista,
-t_pena_muerte,
-t_defender_espana,
-t_servicio_civil,
-t_estado_excepcion,
-t_medioambiente,
-t_certificacion_medioambiente,
-t_sga,
-t_normativa_medioambiente,
-t_politica_medioambiental,
-t_funciones_rey,
-t_abdicacion,
-t_regencia,
-t_tutela,
-t_cortes_poder,
-t_cortes_autonomia,
-t_cortes_circunscripciones,
-t_cortes_mesa,
-t_cortes_decretos,
-t_gobierno_responsabilidad_penal,
-t_gobierno_investidura,
-t_gobierno_vicepresidente,
-t_gobierno_organo_consultivo,
-t_gobierno_responsabilidad_politica,
-t_relaciones_responsabilidad,
-t_relaciones_interpelaciones,
-t_relaciones_mocion_censura,
-t_relaciones_cuestion_confianza,
-t_relaciones_delegacion,
-t_judicial_independencia,
-t_judicial_cgpj,
-t_judicial_tribunal_supremo,
-t_judicial_ministerio_fiscal,
-t_judicial_inalienable,
-t_economia_potestad,
-t_economia_presupuestos,
-t_economia_principios,
-t_economia_tribunal_cuentas,
-t_economia_articulo128,
-t_territorial_estado,
-t_territorial_autonomia,
-t_territorial_municipio,
-t_territorial_provincia,
-t_territorial_solidaridad,
-t_tc_funcion,
-t_tc_composicion,
-t_tc_mandato,
-t_tc_recursos,
-t_tc_conflictos,
-t_reforma_tituloX,
-t_reforma_total,
-t_reforma_ordinaria,
-t_reforma_dos_tercios,
-t_reforma_referendum
+      t_constitucion
     ]
   };
 })();
@@ -1855,6 +1268,8 @@ if (!q.repeatable) {
 
 // Guardar la pregunta actual
 state.current = q;
+  console.log('[render] Pregunta:', state.current.prompt);
+  console.log('[render] Opciones:', (state.current.options||[]));
 
 
 
@@ -1887,7 +1302,24 @@ state.current = q;
     elOptions.appendChild(btn);
   });
 
-  // Modo contrarreloj
+
+  // Equivalencias en recuadro bajo las respuestas
+  (function(){
+    var box = document.getElementById('equivalenciasBox');
+    if (box) { box.parentNode && box.parentNode.removeChild(box); box = null; }
+    if (Array.isArray(state.current.equivalencias) && state.current.equivalencias.length){
+      box = document.createElement('div');
+      box.id = 'equivalenciasBox';
+      box.className = 'card';
+      box.style.marginTop = '12px';
+      box.style.fontSize = '18px';
+      box.style.lineHeight = '1.5';
+      var html = '<strong>Equivalencias</strong>' + '<div style="margin-top:6px">'
+        + (state.current.equivalencias||[]).map(function(e){return '<div>&bull; '+e+'</div>';}).join('') + '</div>';
+      box.innerHTML = html;
+      elOptions.insertAdjacentElement('afterend', box);
+    }
+  })();  // Modo contrarreloj
   if (state.mode === "contrarreloj"){
     clearInterval(state.timerId);
     state.timeLeft = Math.max(20, 40 - (state.level-1)*5);
@@ -1941,18 +1373,23 @@ function toggleSelect(idx, elBtn){
 }
 
 function checkAnswer(){
-  if (state.selection.size===0) return;
+if (state.selection.size===0) return;
 
-  // 🔹 detener el temporizador mientras se corrige la pregunta
+  // detener el temporizador mientras se corrige la pregunta
   if (state.mode === "contrarreloj" && state.timerId){
     clearInterval(state.timerId);
     state.timerId = null;
   }
 
   const correctSet = new Set(state.current.correct);
-  const isCorrect =
+  const isCorrect = (
     state.selection.size === correctSet.size &&
-    Array.from(state.selection).every(i => correctSet.has(i));
+    Array.from(state.selection).every(i => correctSet.has(i))
+  );
+
+  console.log('[check] Selección:', Array.from(state.selection));
+  console.log('[check] Correctas:', Array.from(correctSet));
+  console.log('[check] ¿Correcto?:', isCorrect);
 
   // Pintado de feedback
   Array.from(elOptions.children).forEach((btn, i)=>{
@@ -1963,25 +1400,24 @@ function checkAnswer(){
 
   if (isCorrect){
     state.correct++;
-    // ⬆️ Subir nivel cada 5 aciertos → reduce 5s (hasta 20) en contrarreloj en la siguiente pregunta
-    if (state.correct % 5 === 0){
-      state.level++;
-    }
+    if (state.correct % 5 === 0){ state.level++; }
   } else {
-    // ⬇️ Restar vida en contrarreloj y en vidas
     if (state.mode === "contrarreloj" || state.mode === "vidas"){
       state.lives = Math.max(0, state.lives - 1);
       updateHUD();
-      if (state.lives <= 0){
-        showResult();
-        return;
-      }
+      if (state.lives <= 0){ showResult(); return; }
     }
   }
 
   // Explicación (si la hay)
-  elExplain.textContent = state.current.explanation || "";
-  elExplain.classList.remove('hide');
+  if (state.current.explanation){
+    elExplain.classList.remove('hide');
+    elExplain.classList.add('card');
+    var extra = document.createElement('div');
+    extra.style.marginTop = '8px';
+    extra.textContent = state.current.explanation;
+    elExplain.appendChild(extra);
+  }
 
   elNext.disabled = false;
   updateScore();
@@ -2032,6 +1468,10 @@ function startTest(){
   state.level = 1;
   state.timeLeft = 40;
   state.selection = new Set();
+  console.log('[wizard] Entrada:', { curso: state.curso, especialidad: selEsp.value, asignatura: selAsig.value, tema: selTema.value, modo: modoSel, modelo: selModelo.value });
+  console.log('[wizard] MAPEO key:', `${selEsp.value}|${selAsig.value}|${selTema.value}`);
+  console.log('[wizard] Entrada:', { curso: state.curso, especialidad: selEsp.value, asignatura: selAsig.value, tema: selTema.value, modo: modoSel, modelo: selModelo.value });
+  console.log('[wizard] MAPEO key:', `${selEsp.value}|${selAsig.value}|${selTema.value}`);
 
   // Inicializar arrays vacíos para evitar errores
   state.pool = [];
@@ -2041,6 +1481,9 @@ function startTest(){
   const MAPEO_TEMAS = {
     "GENERAL|Constitución|Test Constitución": "constitucion",
     "GENERAL|EOFAS|EOFAS": "eofas",
+    "CYB|Elementos de Sistemas de Telecomunicaciones|Magnitudes y unidades": "magnitudes_y_unidades",
+    "CAE|Elementos de Sistemas de Telecomunicaciones|Magnitudes y unidades": "magnitudes_y_unidades",
+    "PAO|Elementos de Sistemas de Telecomunicaciones|Magnitudes y unidades": "magnitudes_y_unidades",
     "MER|Matemáticas|Aritmética": "matematicas_aritmetica",
     "ELC|Matemáticas|Aritmética": "matematicas_aritmetica",
     "MER|Fundamentos de electricidad|Teoría de los electrones": "teoria_electrones",
@@ -2312,7 +1755,8 @@ function renderModelOptions(){
     });
   }
   updateStartEnabled();
-}
+
+  }
 
 
 function setupWizard(){
@@ -2323,6 +1767,7 @@ function setupWizard(){
   var rowModo   = getRow(document.getElementById("modo"));
   var rowModelo = getRow(selModelo);
   var rowStart  = getRow(elStart);
+  var filaEAT  = document.getElementById("fila-eat");
 
   // Estado inicial — solo visible "Curso"
   show(rowEsp,    false);
@@ -2338,8 +1783,8 @@ function setupWizard(){
   divOpcModelo.innerHTML = "";
 
   // PASO 1 → Curso
-  selCurso.addEventListener("change", function(){
-    // Reset dependientes
+  function handleCursoChange(){
+  try {
     selEsp.value = "";
     selAsig.innerHTML = '<option value="">-- Selecciona asignatura --</option>';
     selTema.innerHTML = '<option value="">-- Selecciona tema --</option>';
@@ -2349,18 +1794,25 @@ function setupWizard(){
     selModelo.value = "";
     divOpcModelo.classList.add('hide');
     divOpcModelo.innerHTML = "";
-
-    // Mostrar solo lo siguiente
-    show(rowEsp,    !!selCurso.value);
-    show(rowAsig,   false);
-    show(rowTema,   false);
-    show(rowModo,   false);
+    const hasCurso = !!selCurso.value;
+    selEsp.disabled = !hasCurso;
+    if (filaEAT) show(filaEAT, hasCurso);
+    show(rowEsp, hasCurso);
+    show(rowAsig, false);
+    show(rowTema, false);
+    show(rowModo, false);
     show(rowModelo, false);
-
     updateStartEnabled();
-  });
+    console.log('[wizard] curso change:', selCurso.value);
+  } catch(e){ console.error('[wizard] handleCursoChange error', e); }
+}
+selCurso.addEventListener('change', handleCursoChange);
+selCurso.addEventListener('input', handleCursoChange);
 
-  // PASO 2 → Especialidad
+
+    if (selCurso && selCurso.value) { handleCursoChange(); }
+
+// PASO 2 → Especialidad
   selEsp.addEventListener("change", function(){
     selAsig.innerHTML = '<option value="">-- Selecciona asignatura --</option>';
     selTema.innerHTML = '<option value="">-- Selecciona tema --</option>';
@@ -2535,7 +1987,384 @@ const ELEMENTOS = {
   48: { nombre: "Cadmio", config: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s²" },
   49: { nombre: "Indio", config: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p¹" },
   50: { nombre: "Estaño", config: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p²" },
+
+  
 };
+
+
+const EQUIVALENCIAS = {
+  distancia: {
+    km: { m: {num: 1000, den: 1} },
+    m: {
+      km: {num: 1, den: 1000},
+      cm: {num: 100, den: 1},
+      mm: {num: 1000, den: 1},
+      in: {num: 39.37, den: 1},
+      ft: {num: 3.281, den: 1},
+      yd: {num: 1.094, den: 1},
+      mi: {num: 1/1609, den: 1}
+    },
+    cm: { m: {num: 1, den: 100}, mm: {num: 10, den: 1} },
+    mm: { m: {num: 1, den: 1000}, cm: {num: 1, den: 10} },
+    in: { m: {num: 1, den: 39.37}, ft: {num: 1, den: 12} },
+    ft: { m: {num: 1, den: 3.281}, in: {num: 12, den: 1}, yd: {num: 1, den: 3} },
+    yd: { m: {num: 1, den: 1.094}, ft: {num: 3, den: 1} },
+    mi: { m: {num: 1609, den: 1}, yd: {num: 1760, den: 1} }
+  },
+
+  tiempo: {
+    h: { min: {num: 60, den: 1}, s: {num: 3600, den: 1}, d: {num: 1/24, den: 1} },
+    min: { h: {num: 1, den: 60}, s: {num: 60, den: 1} },
+    s: { min: {num: 1, den: 60}, h: {num: 1, den: 3600}, ms: {num: 1000, den: 1} },
+    ms: { s: {num: 1, den: 1000} },
+    d: { h: {num: 24, den: 1}, año: {num: 1, den: 365} },
+    año: { d: {num: 365, den: 1} }
+  },
+
+
+  datos: {
+    bit: {
+      byte: {num: 1, den: 8}
+    },
+    byte: {
+      bit: {num: 8, den: 1},
+      KB: {num: 1, den: 1024}
+    },
+    KB: {
+      byte: {num: 1024, den: 1},
+      MB: {num: 1, den: 1024}
+    },
+    MB: {
+      KB: {num: 1024, den: 1},
+      GB: {num: 1, den: 1024}
+    },
+    GB: {
+      MB: {num: 1024, den: 1}
+    }
+  },
+
+  temperatura: {
+    C: {
+      K: { type: "affine", scale: 1, offset: 273.15, display: "K = °C + 273.15" },
+      F: { type: "affine", scale: 9/5, offset: 32, display: "°F = °C * 1.8 + 32" }
+    },
+    K: {
+      C: { type: "affine", scale: 1, offset: -273.15, display: "°C = K - 273.15" },
+      F: { type: "affine", scale: 9/5, offset: -459.67, display: "°F = K * 1.8 - 459.67" }
+    },
+    F: {
+      C: { type: "affine", scale: 5/9, offset: -(32 * 5/9), display: "°C = (°F - 32) * 5/9" },
+      K: { type: "affine", scale: 5/9, offset: 273.15 - (32 * 5/9), display: "K = (°F - 32) * 5/9 + 273.15" }
+    }
+  }
+};
+
+const UNIT_LABELS = {
+  C: "°C",
+  F: "°F",
+  K: "K"
+};
+
+function formatUnitLabel(unit) {
+  return UNIT_LABELS[unit] || unit;
+}
+
+function formatNumber(num) {
+// Formateo robusto con notación científica cuando el redondeo daría 0
+  if (!Number.isFinite(num)) {
+    return String(num);
+  }
+  if (Number.isInteger(num)) {
+    return String(num);
+  }
+  const abs = Math.abs(num);
+  const fixed = num.toFixed(3);
+  const trimmed = fixed.replace(/\.?0+$/, '');
+  if (parseFloat(trimmed) === 0 && abs > 0) {
+    const exp = Math.floor(Math.log10(abs));
+    const mant = num / Math.pow(10, exp);
+    const supers = { '0':'\u2070','1':'\u00b9','2':'\u00b2','3':'\u00b3','4':'\u2074','5':'\u2075','6':'\u2076','7':'\u2077','8':'\u2078','9':'\u2079','-':'\u207b' };
+    const expStr = String(exp).split('').map(c=>supers[c]||c).join('');
+    return mant.toFixed(3).replace(/\.?0+$/, '') + '\u00d7' + '10' + expStr;
+  }
+  return trimmed === '-0' ? '0' : trimmed;
+}
+
+
+
+
+function applyConversion(value, rule) {
+  if (!rule) {
+    throw new Error("Regla de conversión ausente");
+  }
+  if (typeof rule.convert === "function") {
+    return rule.convert(value);
+  }
+  if (rule.type === "affine") {
+    return value * rule.scale + rule.offset;
+  }
+  if (typeof rule.num !== "undefined" && typeof rule.den !== "undefined") {
+    return value * (rule.num / rule.den);
+  }
+  throw new Error("Tipo de conversión no soportado");
+}
+
+function describeConversion(from, to, rule) {
+const fromLabel = formatUnitLabel(from);
+  const toLabel = formatUnitLabel(to);
+
+  if (rule && rule.display) {
+    return rule.display;
+  }
+
+  const hasNumDen = rule && typeof rule.num !== 'undefined' && typeof rule.den !== 'undefined';
+  const isComposite = String(from).includes('/') || String(to).includes('/');
+
+  // Si tenemos factor numérico, siempre lo mostramos, también para compuestas
+  if (hasNumDen) {
+    const factor = rule.num / rule.den;
+    const factorStr = formatNumber(factor);
+    if (isComposite) {
+      const splitFrom = String(from).split('/');
+      const splitTo = String(to).split('/');
+      const fNum = splitFrom[0] || from;
+      const fDen = splitFrom[1] || '';
+      const tNum = splitTo[0] || to;
+      const tDen = splitTo[1] || '';
+      const hints = [];
+      if (fNum && tNum && fNum !== tNum) {
+        hints.push(`(${formatUnitLabel(fNum)} \u2192 ${formatUnitLabel(tNum)})`);
+      }
+      if (fDen || tDen) {
+        if (fDen && tDen && fDen !== tDen) {
+          hints.push(`/ (${formatUnitLabel(fDen)} \u2192 ${formatUnitLabel(tDen)})`);
+        } else if (fDen && !tDen) {
+          hints.push(`/ (${formatUnitLabel(fDen)})`);
+        } else if (!fDen && tDen) {
+          hints.push(`/ (${formatUnitLabel(tDen)})`);
+        }
+      }
+      const hintStr = hints.length ? ` ${hints.join(' ')}` : '';
+      return `1 ${fromLabel} = ${factorStr} ${toLabel}${hintStr}`;
+    }
+    return `1 ${fromLabel} = ${factorStr} ${toLabel}`;
+  }
+
+  if (rule && rule.type === 'affine') {
+    const scale = formatNumber(rule.scale);
+    const offset = rule.offset || 0;
+    if (!offset) {
+      return `${toLabel} = ${scale} * ${fromLabel}`;
+    }
+    const signo = offset >= 0 ? '+' : '-';
+    return `${toLabel} = ${scale} * ${fromLabel} ${signo} ${formatNumber(Math.abs(offset))}`;
+  }
+
+  // Fallback composito solo con etiquetas si no hay num/den
+  if (isComposite) {
+    const splitFrom = String(from).split('/');
+    const splitTo = String(to).split('/');
+    const fNum = splitFrom[0] || from;
+    const fDen = splitFrom[1] || '';
+    const tNum = splitTo[0] || to;
+    const tDen = splitTo[1] || '';
+    const parts = [];
+    if (fNum && tNum) parts.push(`(${formatUnitLabel(fNum)} \u2192 ${formatUnitLabel(tNum)})`);
+    if (fDen || tDen) {
+      if (fDen && tDen) parts.push(`/ (${formatUnitLabel(fDen)} \u2192 ${formatUnitLabel(tDen)})`);
+      else if (fDen) parts.push(`/ (${formatUnitLabel(fDen)})`);
+      else if (tDen) parts.push(`/ (${formatUnitLabel(tDen)})`);
+    }
+    return `${fromLabel} = ${parts.join(' ')}`;
+  }
+
+  return `${fromLabel} \u2192 ${toLabel}`;
+}
+
+
+
+
+
+
+function conversion_unidades() {  function sci(num){
+    if (!Number.isFinite(num)) return String(num);
+    if (num === 0) return '0';
+    const abs = Math.abs(num);
+    const exp = Math.floor(Math.log10(abs));
+    const mant = num / Math.pow(10, exp);
+    const mantStr = mant.toFixed(3).replace(/\.?0+$/, '');
+    const supers = { '0':'\u2070','1':'\u00b9','2':'\u00b2','3':'\u00b3','4':'\u2074','5':'\u2075','6':'\u2076','7':'\u2077','8':'\u2078','9':'\u2079','-':'\u207b' };
+    const expStr = String(exp).split('').map(c=>supers[c]||c).join('');
+    return mantStr + '\u00d7' + '10' + expStr;
+  }
+
+  function generarDistractores(valor) {
+    const candidatos = new Set();
+    const addCandidate = (num) => {
+      if (!Number.isFinite(num)) return;
+      if (num === valor) return;
+      candidatos.add(num);
+    };
+    addCandidate(valor * 10);
+    addCandidate(valor / 10);
+    const absValor = Math.abs(valor) || 1;
+    const order = Math.floor(Math.log10(absValor));
+    let step;
+    if (order >= 2) step = Math.pow(10, order - 1);
+    else if (order === 1) step = 10;
+    else if (order === 0) step = 1;
+    else step = Math.pow(10, order);
+    if (!Number.isFinite(step) || step === 0) step = absValor * 0.1 || 0.1;
+    [Math.floor(valor / step) * step, Math.ceil(valor / step) * step].forEach(addCandidate);
+    addCandidate(valor + step);
+    addCandidate(valor - step);
+    [0.9, 1.1, 0.95, 1.05].forEach((f)=>addCandidate(valor * f));
+    let i = 1;
+    while (candidatos.size < 3 && i <= 12){ addCandidate(valor + i*step*0.1); addCandidate(valor - i*step*0.1); addCandidate(valor*(1+i*0.02)); i++; }
+    if (!candidatos.size){ addCandidate(valor + absValor); addCandidate(valor - absValor); addCandidate(valor + absValor*0.5); }
+    return shuffle(Array.from(candidatos));
+  }
+
+  function buscarCaminoSimple(grafo, pasos) {
+    const unidades = shuffle(Object.keys(grafo));
+    for (const origen of unidades) {
+      const visitados = new Set([origen]);
+      const camino = [origen];
+      const res = explorar(origen, pasos, grafo, visitados, camino);
+      if (res) return res;
+    }
+    return null;
+  }
+
+  function explorar(actual, restantes, grafo, visitados, camino) {
+    if (restantes === 0) return [...camino];
+    const vecinos = shuffle(Object.keys(grafo[actual] || {}).filter(u=>!visitados.has(u)));
+    for (const v of vecinos){
+      visitados.add(v); camino.push(v);
+      const r = explorar(v, restantes-1, grafo, visitados, camino);
+      if (r) return r;
+      camino.pop(); visitados.delete(v);
+    }
+    return null;
+  }
+
+  let intentos = 0;
+  const allMagnitudes = Object.keys(EQUIVALENCIAS).filter(k => k !== 'temperatura');
+
+  while (intentos < 10){
+    intentos++;
+    console.log(`\uD83D\uDD04 Intento ${intentos}`);
+
+    // Elegir cuántas magnitudes combinar (2 a 4)
+    const k = Math.min(4, Math.max(2, rndInt(2, Math.min(4, allMagnitudes.length))));
+    const mags = shuffle(allMagnitudes).slice(0, k);
+
+    // Partición en numerador/denominador (al menos 1 arriba)
+    const numCount = rndInt(1, mags.length);
+    const numeradores = mags.slice(0, numCount);
+    const denominadores = mags.slice(numCount);
+
+    console.log('[conv] Combinación:', {numeradores, denominadores});
+
+    // Construir caminos por magnitud
+    let valido = true;
+    const piezas = [];
+    for (const [rol, lista] of [['num', numeradores], ['den', denominadores]]){
+      for (const mag of lista){
+        const grafo = EQUIVALENCIAS[mag];
+        const pasos = rndInt(1, 2);
+        const camino = buscarCaminoSimple(grafo, pasos);
+        if (!camino){ valido = false; break; }
+        let factor = 1; const localSteps = [];
+        for (let i=0;i<camino.length-1;i++){
+          const a = camino[i], b = camino[i+1];
+          const regla = (grafo[a]||{})[b];
+          if (!regla){ valido = false; break; }
+          localSteps.push({from:a, to:b, rule:regla});
+          factor = applyConversion(factor, regla);
+        }
+        if (!valido) break;
+        piezas.push({ rol, mag, path: localSteps, factor, from: camino[0], to: camino[camino.length-1], pasos: camino.length-1 });
+      }
+      if (!valido) break;
+    }
+    if (!valido || piezas.length === 0) continue;
+
+    // Construir unidades compuestas origen/destino con punto medio
+    const dot = '\u00b7';
+    const numFrom = piezas.filter(p=>p.rol==='num').map(p=>formatUnitLabel(p.from));
+    const denFrom = piezas.filter(p=>p.rol==='den').map(p=>formatUnitLabel(p.from));
+    const numTo   = piezas.filter(p=>p.rol==='num').map(p=>formatUnitLabel(p.to));
+    const denTo   = piezas.filter(p=>p.rol==='den').map(p=>formatUnitLabel(p.to));
+    const unitFrom = numFrom.join(dot) + (denFrom.length? '/' + denFrom.join(dot) : '');
+    const unitTo   = numTo.join(dot)   + (denTo.length?   '/' + denTo.join(dot)   : '');
+
+    console.log('✅ Camino compuesto:', unitFrom, '→', unitTo);
+
+    // Cantidad
+    const cantidad = rndInt(1, 20);
+    console.log(`\uD83D\uDCE6 Cantidad inicial: ${sci(cantidad)} ${unitFrom}`);
+
+    // Factor combinado
+    let factorTotal = 1; const factores = [];
+    for (const pieza of piezas){
+      for (const st of pieza.path){
+        factores.push(describeConversion(st.from, st.to, st.rule));
+      }
+      if (pieza.rol === 'num') factorTotal *= pieza.factor; else factorTotal /= pieza.factor;
+    }
+
+    let valor = cantidad * factorTotal;
+    if (!Number.isFinite(valor)){ console.error('💥 Valor no finito:', valor); continue; }
+
+    const correctoStr = sci(valor);
+    console.log(`🎯 Resultado correcto: ${correctoStr} ${unitTo}`);
+    console.log('🧮 Factores aplicados:', factores);
+
+    const distractoresNum = generarDistractores(valor);
+    if (distractoresNum.length < 3){
+      const set = new Set(distractoresNum); const base = Math.max(Math.abs(valor), 1);
+      let extra=1; while (set.size<3){ set.add(valor + base*extra); extra++; }
+      distractoresNum.splice(0, distractoresNum.length, ...Array.from(set));
+    }
+    const opcionesFmt = shuffle([valor, ...distractoresNum.slice(0,3)]).map(sci);
+    console.log('🧠 Opciones generadas:', opcionesFmt);
+
+    return {
+      tema: 'Magnitudes y Unidades', modelos: ['C','D'], repeatable: true, mode: 'single',
+      prompt: `Convierte ${sci(cantidad)} ${unitFrom} a ${unitTo}.`,
+      equivalencias: factores,
+      options: opcionesFmt,
+      correct: [opcionesFmt.indexOf(correctoStr)]
+    };
+  }
+
+  console.error('❌ No se pudo generar pregunta válida, devolviendo fallback...');
+  return { tema: 'Magnitudes y Unidades', modelos: ['C','D'], repeatable: true, mode: 'single',
+    prompt: 'Convierte 1 km a m. (Equivalencia: 1 km = 1000 m)', options: ['1000','100','10','2000'], correct: [0] };
+}
+
+
+
+
+
+
+
+
+
+
+REGISTRY.types["magnitudes_y_unidades"] = {
+  name: "Magnitudes y Unidades",
+  templates: [conversion_unidades]
+};
+
+
+
+
+
+
+
+
 
 
 
@@ -3157,3 +2986,12 @@ function pregunta_teoria_de_los_electrones_25() {
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
