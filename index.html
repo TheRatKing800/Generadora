@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
@@ -1484,6 +1484,9 @@ function startTest(){
     "CYB|Elementos de Sistemas de Telecomunicaciones|Magnitudes y unidades": "magnitudes_y_unidades",
     "CAE|Elementos de Sistemas de Telecomunicaciones|Magnitudes y unidades": "magnitudes_y_unidades",
     "PAO|Elementos de Sistemas de Telecomunicaciones|Magnitudes y unidades": "magnitudes_y_unidades",
+    "PAO|Sistemas de telefonía fija y móvil|Introducción": "introduccion_telefonia",
+    "CYB|Sistemas de telefonía fija y móvil|Introducción": "introduccion_telefonia",
+    "CAE|Sistemas de telefonía fija y móvil|Introducción": "introduccion_telefonia",
     "MER|Matemáticas|Aritmética": "matematicas_aritmetica",
     "ELC|Matemáticas|Aritmética": "matematicas_aritmetica",
     "MER|Fundamentos de electricidad|Teoría de los electrones": "teoria_electrones",
@@ -2358,9 +2361,71 @@ REGISTRY.types["magnitudes_y_unidades"] = {
   templates: [conversion_unidades]
 };
 
+REGISTRY.types["introduccion_telefonia"] = {
+  name: "Introducción",
+  templates: [magnitudes_electricas_cyb]
+};
 
 
+function magnitudes_electricas_cyb() {
+  const data = [
+    { magnitud: "Tensión", simbolo: "U o V", unidad: "Voltio" },
+    { magnitud: "Intensidad", simbolo: "I", unidad: "Amperio" },
+    { magnitud: "Resistencia", simbolo: "R", unidad: "Ohmio" },
+    { magnitud: "Capacidad", simbolo: "C", unidad: "Faradio" },
+    { magnitud: "Potencia", simbolo: "P", unidad: "Vatio" },
+    { magnitud: "Frecuencia", simbolo: "f", unidad: "Hercio" }
+  ];
 
+  // Seleccionar un elemento aleatorio de la lista
+  const elemento = data[Math.floor(Math.random() * data.length)];
+
+  // Elegir al azar qué dar (magnitud/símbolo/unidad)
+  const campos = ["magnitud", "simbolo", "unidad"];
+  const dado = campos[Math.floor(Math.random() * campos.length)];
+
+  // Elegir cuál preguntar (de los otros dos)
+  let posibles = campos.filter(c => c !== dado);
+  const preguntar = posibles[Math.floor(Math.random() * posibles.length)];
+
+  // Enunciado dinámico
+  let prompt;
+  if (dado === "magnitud" && preguntar === "simbolo") {
+    prompt = `La magnitud "${elemento.magnitud}" se representa con el símbolo…`;
+  } else if (dado === "magnitud" && preguntar === "unidad") {
+    prompt = `La magnitud "${elemento.magnitud}" se mide en…`;
+  } else if (dado === "simbolo" && preguntar === "magnitud") {
+    prompt = `El símbolo "${elemento.simbolo}" corresponde a la magnitud…`;
+  } else if (dado === "simbolo" && preguntar === "unidad") {
+    prompt = `El símbolo "${elemento.simbolo}" corresponde a la unidad…`;
+  } else if (dado === "unidad" && preguntar === "magnitud") {
+    prompt = `La unidad "${elemento.unidad}" corresponde a la magnitud…`;
+  } else if (dado === "unidad" && preguntar === "simbolo") {
+    prompt = `La unidad "${elemento.unidad}" se representa con el símbolo…`;
+  }
+
+  // Respuesta correcta
+  const correcta = elemento[preguntar];
+
+  // Distractores: valores del mismo campo de los otros elementos
+  const incorrectas = data
+    .filter(e => e !== elemento)
+    .map(e => e[preguntar]);
+
+  // Seleccionar 3 distractores al azar
+  const distractores = shuffle(incorrectas).slice(0, 3);
+
+  let opciones = shuffle([correcta, ...distractores]);
+
+  return {
+    mode: "single",
+    prompt: prompt,
+    options: opciones,
+    correct: [opciones.indexOf(correcta)],
+    modelos: ["C", "D"],
+    repeatable: true
+  };
+}
 
 
 
@@ -2986,6 +3051,7 @@ function pregunta_teoria_de_los_electrones_25() {
 </script>
 </body>
 </html>
+
 
 
 
