@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
@@ -1235,102 +1235,97 @@ function makeQuestion(){
   return fn();
 }
 
-function renderQuestion(){
-  if (!state.typeKey || !REGISTRY.types[state.typeKey]){
+function renderQuestion() {
+  if (!state.typeKey || !REGISTRY.types[state.typeKey]) {
     elPrompt.textContent = "❌ Error: no hay ejercicios cargados para este tema.";
     return;
   }
 
   // Usar directamente el pool ya preparado en startTest()
-if (!state.pool || state.pool.length === 0){
-  if (state.repeatables && state.repeatables.length > 0){
-    state.pool = state.repeatables.slice();
-  } else {
+  if (!state.pool || state.pool.length === 0) {
+    if (state.repeatables && state.repeatables.length > 0) {
+      state.pool = state.repeatables.slice();
+    } else {
+      showResult();
+      return;
+    }
+  }
+
+  // Elegir al azar una plantilla del pool
+  let q = null;
+  let f = null;
+  let idx = -1;
+  let attempts = 0;
+  const maxAttempts = Math.max(3, state.pool.length);
+
+  while (!q && state.pool.length > 0 && attempts < maxAttempts) {
+    attempts++;
+    idx = rndInt(0, state.pool.length - 1);
+    f = state.pool[idx];
+    try {
+      const candidate = f();
+      if (!candidate || typeof candidate !== 'object') {
+        throw new Error('Plantilla devolvió un resultado no válido');
+      }
+      if (!Array.isArray(candidate.options) || candidate.options.length < 2) {
+        throw new Error('Pregunta sin opciones suficientes');
+      }
+      q = candidate;
+      if (!q.repeatable) {
+        state.pool.splice(idx, 1);
+      }
+    } catch (err) {
+      console.error('[render] Plantilla fallida', f && f.name, err);
+      state.pool.splice(idx, 1);
+      state.repeatables = state.repeatables.filter(fn => fn !== f);
+    }
+  }
+
+  if (!q) {
     showResult();
     return;
   }
-}
 
-
-
-// Elegir al azar una plantilla del pool
-let q = null;
-let f = null;
-let idx = -1;
-let attempts = 0;
-const maxAttempts = Math.max(3, state.pool.length);
-
-while (!q && state.pool.length > 0 && attempts < maxAttempts) {
-  attempts++;
-  idx = rndInt(0, state.pool.length - 1);
-  f = state.pool[idx];
-  try {
-    const candidate = f();
-    if (!candidate || typeof candidate !== 'object') {
-      throw new Error('Plantilla devolvió un resultado no válido');
-    }
-    if (!Array.isArray(candidate.options) || candidate.options.length < 2) {
-      throw new Error('Pregunta sin opciones suficientes');
-    }
-    q = candidate;
-    if (!q.repeatable) {
-      state.pool.splice(idx, 1);
-    }
-  } catch (err) {
-    console.error('[render] Plantilla fallida', f && f.name, err);
-    state.pool.splice(idx, 1);
-    // Elimina también de la lista de repetibles para evitar reinsertarla
-    state.repeatables = state.repeatables.filter(fn => fn !== f);
-  }
-}
-
-if (!q) {
-  showResult();
-  return;
-}
-
-// Guardar la pregunta actual
-state.current = q;
+  // Guardar la pregunta actual
+  state.current = q;
   console.log('[render] Pregunta:', state.current.prompt);
-  console.log('[render] Opciones:', (state.current.options||[]));
-
-
-
-
-
-
-
-
-
-
+  console.log('[render] Opciones:', (state.current.options || []));
 
   state.selection = new Set();
 
-  const {mode, prompt, options} = state.current;
+  const { mode, prompt, options } = state.current;
 
   elModeBadge.textContent = (mode === "multi" ? "MODO: Múltiple" : "MODO: Única");
-  elPrompt.textContent = prompt || "—";
-  elExplain.classList.add('hide'); 
+
+  // 👇 Aquí el cambio importante
+  elPrompt.innerHTML = prompt || "—";
+
+  elExplain.classList.add('hide');
   elExplain.textContent = "";
 
   // Pintar opciones
   elOptions.innerHTML = "";
-  options.forEach((text, idx)=>{
+  options.forEach((text, idx) => {
     const btn = document.createElement('button');
     btn.className = 'opt';
     btn.type = "button";
     btn.dataset.index = String(idx);
-    btn.innerHTML = `<strong>${String.fromCharCode(97+idx)})</strong> ${text}`;
-    btn.addEventListener('click', ()=>toggleSelect(idx, btn));
+
+    // 👇 Usamos innerHTML para que se rendericen tablas HTML
+    btn.innerHTML = `<strong>${String.fromCharCode(97 + idx)})</strong> ${text}`;
+
+    btn.addEventListener('click', () => toggleSelect(idx, btn));
     elOptions.appendChild(btn);
   });
 
-
   // Equivalencias en recuadro bajo las respuestas
-  (function(){
+  (function () {
     var box = document.getElementById('equivalenciasBox');
-    if (box) { box.parentNode && box.parentNode.removeChild(box); box = null; }
-    if (Array.isArray(state.current.equivalencias) && state.current.equivalencias.length){
+    if (box) {
+      box.parentNode && box.parentNode.removeChild(box);
+      box = null;
+    }
+    if (Array.isArray(state.current.equivalencias) && state.current.equivalencias.length) {
       box = document.createElement('div');
       box.id = 'equivalenciasBox';
       box.className = 'card';
@@ -1338,25 +1333,27 @@ state.current = q;
       box.style.fontSize = '18px';
       box.style.lineHeight = '1.5';
       var html = '<strong>Equivalencias</strong>' + '<div style="margin-top:6px">'
-        + (state.current.equivalencias||[]).map(function(e){return '<div>&bull; '+e+'</div>';}).join('') + '</div>';
+        + (state.current.equivalencias || []).map(function (e) { return '<div>&bull; ' + e + '</div>'; }).join('') + '</div>';
       box.innerHTML = html;
       elOptions.insertAdjacentElement('afterend', box);
     }
-  })();  // Modo contrarreloj
-  if (state.mode === "contrarreloj"){
+  })();
+
+  // Modo contrarreloj
+  if (state.mode === "contrarreloj") {
     clearInterval(state.timerId);
-    state.timeLeft = Math.max(20, 40 - (state.level-1)*5);
+    state.timeLeft = Math.max(20, 40 - (state.level - 1) * 5);
     updateHUD();
-    state.timerId = setInterval(()=>{
+    state.timerId = setInterval(() => {
       state.timeLeft--;
       updateHUD();
-      if (state.timeLeft <= 0){
+      if (state.timeLeft <= 0) {
         state.lives--;
         clearInterval(state.timerId);
-        if (state.lives <= 0){ 
-          showResult(); 
-          return; 
-        } else if (state.timerId){
+        if (state.lives <= 0) {
+          showResult();
+          return;
+        } else if (state.timerId) {
           clearInterval(state.timerId);
           state.timerId = null;
         }
@@ -1366,11 +1363,12 @@ state.current = q;
   }
 
   // Meta
-  elMeta.textContent = state.total ? `Pregunta ${state.asked+1} de ${state.total}` : `Pregunta ${state.asked+1}`;
+  elMeta.textContent = state.total ? `Pregunta ${state.asked + 1} de ${state.total}` : `Pregunta ${state.asked + 1}`;
   elNext.disabled = true;
   updateScore();
   updateHUD();
 }
+
 
 
 
@@ -1504,9 +1502,17 @@ function startTest(){
   MAPEO_TEMAS = {
     "GENERAL|Constitución|Test Constitución": "constitucion",
     "GENERAL|EOFAS|EOFAS": "eofas",
+    "GENERAL|English|Basic English": "ingles_basico",
+    "GENERAL|English|Advance English": "ingles_advanzado",
     "CYB|Elementos de Sistemas de Telecomunicaciones|Magnitudes y unidades": "magnitudes_y_unidades",
     "CAE|Elementos de Sistemas de Telecomunicaciones|Magnitudes y unidades": "magnitudes_y_unidades",
     "PAO|Elementos de Sistemas de Telecomunicaciones|Magnitudes y unidades": "magnitudes_y_unidades",
+    "CYB|Itinerario Personal para la Empleabilidad|Salud Laboral" : "salud_laboral_cyb",
+    "CAE|Itinerario Personal para la Empleabilidad|Salud Laboral" : "salud_laboral_cyb",
+    "PAO|Itinerario Personal para la Empleabilidad|Salud Laboral" : "salud_laboral_cyb",
+    "CYB|Sistemas informáticos y redes locales|Introducción a la electrónica digital" : "electronica_digital",
+    "CAE|Sistemas informáticos y redes locales|Introducción a la electrónica digital" : "electronica_digital",
+    "PAO|Sistemas informáticos y redes locales|Introducción a la electrónica digital" : "electronica_digital",
     "ELC|Fundamentos de electricidad|Electricidad estática y conducción": "electricidad_estatica",
     "MER|Fundamentos de electricidad|Electricidad estática y conducción": "electricidad_estatica",
     "PAO|Sistemas de telefonía fija y móvil|Introducción": "introduccion_telefonia",
@@ -1659,6 +1665,7 @@ const ESPECIALIDADES_BY_CURSO = {
     "GENERAL": {
       "Constitución": ["Test Constitución"],
       "EOFAS": ["EOFAS"],
+      "English": ["Basic English","Advance English"]
     },
     "CAE": {
       "Técnicas y Procesos de Infraestructuras y Telecomunicaciones":["Replanteo de infraestructuras de sistemas de telecomunicaciones"],
@@ -1670,7 +1677,9 @@ const ESPECIALIDADES_BY_CURSO = {
       "Técnicas y Procesos de Infraestructuras y Telecomunicaciones":["Replanteo de infraestructuras de sistemas de telecomunicaciones"],
       "Sistemas de telefonía fija y móvil":["Introducción","Introducción a la telefonía","Evolución de la estructura de la red telefónica","La señal telefónica","Telefonía digital","Multiplexación de canales MIC","Tecnologías de banda ancha. RDSI y ATM","Estructura de la red y tráfico telefónico", "Conmutación telefónica","Sistemas digitales de conmutación","Sistema privado de conmutación PBX"],
       "Auditoría Redes WIFI":["Introducción","Herramientas de auditoría de redes LAN inalámbricas","Criptografía","Medidas de seguridad básicas","Herramientas de captura y analisis de tráfico TCP/IP"],
-      "Elementos de Sistemas de Telecomunicaciones":["Magnitudes y unidades"]
+      "Elementos de Sistemas de Telecomunicaciones":["Magnitudes y unidades"],
+      "Itinerario Personal para la Empleabilidad":["Salud Laboral"],
+      "Sistemas informáticos y redes locales":["Introducción a la electrónica digital"]
     },
     "MER": {
       "Matemáticas":["Aritmética","Álgebra","Geometría"],
@@ -2376,7 +2385,14 @@ function conversion_unidades() {  function sci(num){
 
 
 
-
+REGISTRY.types["ingles_basico"] = {
+  name: "Basic English",
+  templates: [conversion_unidades]
+};
+REGISTRY.types["ingles_advanzado"] = {
+  name: "Advance English",
+  templates: [conversion_unidades]
+};
 
 
 
@@ -2384,7 +2400,15 @@ REGISTRY.types["magnitudes_y_unidades"] = {
   name: "Magnitudes y Unidades",
   templates: [conversion_unidades]
 };
+REGISTRY.types["electronica_digital"] = {
+  name: "Introducción a la electrónica digital",
+  templates: [pregunta_cronograma_verdad]
+};
 
+REGISTRY.types["salud_laboral_cyb"] = {
+  name: "Salud Laboral",
+  templates: [pregunta_salud_laboral_1,pregunta_salud_laboral_2,pregunta_salud_laboral_3]
+};
 REGISTRY.types["introduccion_telefonia"] = {
   name: "Introducción",
   templates: [magnitudes_electricas_cyb]
@@ -4107,19 +4131,472 @@ function pregunta_electricidad_estatica_26() {
   };
 }
 
+// Estado global para controlar combinaciones ya usadas
+let usadas_salud_laboral_1 = [];
+let usadas_salud_laboral_2 = [];
+
+// Pregunta Aspecto → Importancia
+function pregunta_salud_laboral_1() {
+  const pares = [
+    ["Seguridad y bienestar de los empleados", [
+      "Al identificar y abordar los riesgos antes de que se materialicen, reduce la probabilidad de que ocurran accidentes y enfermedades laborales",
+      "Mejora la salud física y mental de los empleados",
+      "Aumenta la motivación en la plantilla"
+    ]],
+    ["Eficiencia operativa", [
+      "Evita interrupciones en la producción y fomenta la eficiencia y eficacia de los procesos productivos"
+    ]],
+    ["Cumplimiento normativo", [
+      "Evita sanciones y multas por incumplimiento legal",
+      "Demuestra compromiso con la responsabilidad"
+    ]],
+    ["Reducción de costes", [
+      "Disminuye el gasto en atención médica, compensaciones y seguros",
+      "Mejora la eficiencia en el uso de recursos al minimizar la pérdida de tiempo y de recursos"
+    ]],
+    ["Imagen de la empresa", [
+      "Contribuye a una imagen positiva de la empresa, tanto interna como externamente"
+    ]],
+    ["Innovación y desarrollo", [
+      "Fomenta prácticas sostenibles tanto medioambientales como sociales",
+      "Promueve la innovación en la resolución de problemas al fomentar la búsqueda de soluciones creativas y eficientes"
+    ]],
+    ["Cohesión y compromiso", [
+      "Promueve la participación de todos los miembros de la organización, promoviendo un sentido común de responsabilidad"
+    ]]
+  ];
+
+  // Crear todas las combinaciones posibles aspecto+importancia
+  const todas = pares.flatMap(([aspecto, importancias]) => 
+    importancias.map(imp => [aspecto, imp])
+  );
+
+  // Filtrar las que no se han usado aún
+  const disponibles = todas.filter(pair => 
+    !usadas_salud_laboral_1.some(usada => usada[0] === pair[0] && usada[1] === pair[1])
+  );
+
+  // Si ya no hay disponibles, reiniciar
+  if (disponibles.length === 0) {
+    usadas_salud_laboral_1 = [];
+    return pregunta_salud_laboral_1();
+  }
+
+  // Elegir una combinación aleatoria de las disponibles
+  const [aspecto, importancia] = disponibles[Math.floor(Math.random() * disponibles.length)];
+  usadas_salud_laboral_1.push([aspecto, importancia]);
+
+  const correcta = importancia;
+  let incorrectas = todas.map(t => t[1]).filter(i => i !== importancia);
+  incorrectas = shuffle(incorrectas).slice(0, 3);
+
+  const opciones = shuffle([correcta, ...incorrectas]);
+
+  return {
+    mode: "single",
+    prompt: `¿Cuál es la importancia de la cultura preventiva en el aspecto "${aspecto}"?`,
+    options: opciones,
+    correct: [opciones.indexOf(correcta)],
+    modelos: ["B","D"],
+    repeatable: true
+  };
+}
+
+// Pregunta Importancia → Aspecto
+function pregunta_salud_laboral_2() {
+  const pares = [
+    ["Seguridad y bienestar de los empleados", [
+      "Al identificar y abordar los riesgos antes de que se materialicen, reduce la probabilidad de que ocurran accidentes y enfermedades laborales",
+      "Mejora la salud física y mental de los empleados",
+      "Aumenta la motivación en la plantilla"
+    ]],
+    ["Eficiencia operativa", [
+      "Evita interrupciones en la producción y fomenta la eficiencia y eficacia de los procesos productivos"
+    ]],
+    ["Cumplimiento normativo", [
+      "Evita sanciones y multas por incumplimiento legal",
+      "Demuestra compromiso con la responsabilidad"
+    ]],
+    ["Reducción de costes", [
+      "Disminuye el gasto en atención médica, compensaciones y seguros",
+      "Mejora la eficiencia en el uso de recursos al minimizar la pérdida de tiempo y de recursos"
+    ]],
+    ["Imagen de la empresa", [
+      "Contribuye a una imagen positiva de la empresa, tanto interna como externamente"
+    ]],
+    ["Innovación y desarrollo", [
+      "Fomenta prácticas sostenibles tanto medioambientales como sociales",
+      "Promueve la innovación en la resolución de problemas al fomentar la búsqueda de soluciones creativas y eficientes"
+    ]],
+    ["Cohesión y compromiso", [
+      "Promueve la participación de todos los miembros de la organización, promoviendo un sentido común de responsabilidad"
+    ]]
+  ];
+
+  // Crear todas las combinaciones posible importancia+aspecto
+  const todas = pares.flatMap(([aspecto, importancias]) => 
+    importancias.map(imp => [aspecto, imp])
+  );
+
+  // Filtrar las que no se han usado aún
+  const disponibles = todas.filter(pair => 
+    !usadas_salud_laboral_2.some(usada => usada[0] === pair[0] && usada[1] === pair[1])
+  );
+
+  // Si ya no hay disponibles, reiniciar
+  if (disponibles.length === 0) {
+    usadas_salud_laboral_2 = [];
+    return pregunta_salud_laboral_2();
+  }
+
+  // Elegir una combinación aleatoria de las disponibles
+  const [aspecto, importancia] = disponibles[Math.floor(Math.random() * disponibles.length)];
+  usadas_salud_laboral_2.push([aspecto, importancia]);
+
+  const correcta = aspecto;
+  let incorrectas = pares.map(p => p[0]).filter(a => a !== aspecto);
+  incorrectas = shuffle(incorrectas).slice(0, 3);
+
+  const opciones = shuffle([correcta, ...incorrectas]);
+
+  return {
+    mode: "single",
+    prompt: `¿A qué aspecto corresponde la siguiente importancia de la cultura preventiva: "${importancia}"?`,
+    options: opciones,
+    correct: [opciones.indexOf(correcta)],
+    modelos: ["B","D"],
+    repeatable: true
+  };
+}
 
 
 
+function pregunta_salud_laboral_3() {
+  const grupos = {
+    "Condiciones de seguridad": {
+      factores: ["Lugares de trabajo", "Equipos de trabajo"],
+      danos: ["Accidente laboral"]
+    },
+    "Condiciones medioambientales": {
+      factores: ["Agentes físicos", "Agentes químicos", "Agentes biológicos"],
+      danos: ["Enfermedad profesional"]
+    },
+    "Condiciones ergonómicas": {
+      factores: ["Carga física", "Carga mental"],
+      danos: ["Fatiga física", "Fatiga mental"]
+    },
+    "Condiciones psicosociales": {
+      factores: ["Organización del trabajo", "Características personales"],
+      danos: ["Insatisfacción laboral", "Estrés", "Mobbing", "Síndrome de burnout"]
+    }
+  };
+
+  // Convertimos en pares posibles [condición, factor, daño]
+  const todas = Object.entries(grupos).flatMap(([cond, data]) =>
+    data.factores.flatMap(f => 
+      data.danos.map(d => [cond, f, d])
+    )
+  );
+
+  // Elegimos una combinación
+  const [condicion, factor, dano] = todas[Math.floor(Math.random() * todas.length)];
+
+  // Posibles modos de pregunta
+  const modos = ["cond->factor", "factor->cond", "factor->dano", "dano->factor", "cond->dano", "dano->cond"];
+  const modo = modos[Math.floor(Math.random() * modos.length)];
+
+  let prompt, correcta, incorrectas;
+
+  switch (modo) {
+    case "cond->factor":
+      prompt = `¿Cuál es un factor de riesgo laboral asociado a "${condicion}"?`;
+      correcta = factor;
+      incorrectas = todas.map(t => t[1]).filter(f => f !== factor);
+      break;
+
+    case "factor->cond":
+      prompt = `¿A qué condición laboral pertenece el factor de riesgo "${factor}"?`;
+      correcta = condicion;
+      incorrectas = Object.keys(grupos).filter(c => c !== condicion);
+      break;
+
+    case "factor->dano":
+      prompt = `¿Qué daño laboral puede derivarse del factor de riesgo "${factor}"?`;
+      correcta = dano;
+      incorrectas = todas.map(t => t[2]).filter(d => d !== dano);
+      break;
+
+    case "dano->factor":
+      prompt = `¿Qué factor de riesgo laboral puede producir el daño "${dano}"?`;
+      correcta = factor;
+      incorrectas = todas.map(t => t[1]).filter(f => f !== factor);
+      break;
+
+    case "cond->dano":
+      prompt = `¿Qué daño laboral puede producirse por las "${condicion}"?`;
+      correcta = dano;
+      incorrectas = todas.map(t => t[2]).filter(d => d !== dano);
+      break;
+
+    case "dano->cond":
+      prompt = `¿A qué condición laboral está asociado el daño "${dano}"?`;
+      correcta = condicion;
+      incorrectas = Object.keys(grupos).filter(c => c !== condicion);
+      break;
+  }
+
+  // Reducimos distractores a 3
+  incorrectas = shuffle(incorrectas).slice(0, 3);
+  const opciones = shuffle([correcta, ...incorrectas]);
+
+  return {
+    mode: "single",
+    prompt: prompt,
+    options: opciones,
+    correct: [opciones.indexOf(correcta)],
+    modelos: ["B","D"],
+    repeatable: true
+  };
+}
+
+const bancoDefiniciones = [
+  {
+    termino: "Cultura preventiva",
+    genero: "f",
+    tema: "salud_laboral_cyb",
+    definicion: "Conjunto de valores, actitudes y prácticas orientadas a evitar riesgos laborales."
+  }
+];
+
+function pregunta_definiciones_por_tema(tema) {
+  // Filtrar el banco por el tema
+  const banco = bancoDefiniciones.filter(item => item.tema === tema);
+
+  // Elegir un término aleatorio del tema
+  const elegido = banco[Math.floor(Math.random() * banco.length)];
+
+  // Filtrar posibles distractores del mismo tema y género/número
+  let posibles = banco.filter(item => item.genero === elegido.genero && item.termino !== elegido.termino);
+
+  // Si no hay suficientes distractores, usar cualquiera del tema
+  if (posibles.length < 3) {
+    posibles = banco.filter(item => item.termino !== elegido.termino);
+  }
+
+  // Seleccionar hasta 3 incorrectas
+  const incorrectas = shuffle(posibles.map(item => item.definicion)).slice(0, 3);
+
+  // Correcta
+  const correcta = elegido.definicion;
+  const opciones = shuffle([correcta, ...incorrectas]);
+
+  return {
+    mode: "single",
+    prompt: `¿Qué es "${elegido.termino}"?`,
+    options: opciones,
+    correct: [opciones.indexOf(correcta)],
+    modelos: ["B","D"],
+    repeatable: true
+  };
+}
 
 
 
+function pregunta_cronograma_verdad() {
+  const entradas = Math.random() < 0.5 ? 1 : 2;
+  const salidas  = Math.random() < 0.5 ? 1 : 2;
+  const pasos = 6;
+  const stepX = 40;
+  const startX = 20;
+  const endX = startX + pasos * stepX;
+  const labelX = endX + 10;
+  const yStep = 40;
+  const yBase0 = 30;
+  const amp = 15;
+  const numSignals = entradas + salidas;
+  const svgWidth  = endX + 120;
+  const svgHeight = 20 + (numSignals - 1) * yStep + 50;
 
+  // Funciones lógicas disponibles
+  const unary = { ID: a => a, NOT: a => a ^ 1 };
+  const binary = {
+    AND: (a,b) => a & b,
+    OR:  (a,b) => a | b,
+    XOR: (a,b) => a ^ b,
+    NAND:(a,b) => (a & b) ^ 1,
+    NOR: (a,b) => (a | b) ^ 1,
+    XNOR:(a,b) => (a ^ b) ^ 1
+  };
+  const funcSet = (entradas === 1) ? unary : binary;
+  const funcKeys = Object.keys(funcSet);
 
+  // Elegir funciones de salida
+  const f1Name = funcKeys[Math.floor(Math.random() * funcKeys.length)];
+  const f1 = funcSet[f1Name];
+  let f2Name = null, f2 = null;
+  if (salidas === 2) {
+    const alt = funcKeys.filter(k => k !== f1Name);
+    f2Name = (alt.length ? alt[Math.floor(Math.random() * alt.length)] : f1Name);
+    f2 = funcSet[f2Name];
+  }
 
+  // Tabla de verdad correcta
+  const truthRows = [];
+  if (entradas === 1) {
+    for (let a = 0; a <= 1; a++) {
+      if (salidas === 1) truthRows.push([a, f1(a)]);
+      else truthRows.push([a, f1(a), f2(a)]);
+    }
+  } else {
+    for (let a = 0; a <= 1; a++) {
+      for (let b = 0; b <= 1; b++) {
+        if (salidas === 1) truthRows.push([a, b, f1(a,b)]);
+        else truthRows.push([a, b, f1(a,b), f2(a,b)]);
+      }
+    }
+  }
 
+  // Convertir tabla a HTML
+  function tablaHTML(rows, inCount, outCount, headNames) {
+    const heads = headNames || (
+      inCount === 1
+        ? (outCount === 1 ? ["Entrada", "Salida"] : ["Entrada", "Salida 1", "Salida 2"])
+        : (outCount === 1 ? ["A", "B", "Salida"] : ["A", "B", "Salida 1", "Salida 2"])
+    );
+    return `<table border="1" style="border-collapse:collapse;text-align:center;min-width:220px">
+      <tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr>
+      ${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}
+    </table>`;
+  }
+  const correcta = tablaHTML(truthRows, entradas, salidas);
 
+  // Generar distractores
+  function buildRowsFrom(fAname, fBname) {
+    const fA = funcSet[fAname];
+    const fB = fBname ? funcSet[fBname] : null;
+    const rows = [];
+    if (entradas === 1) {
+      for (let a = 0; a <= 1; a++) {
+        rows.push(salidas === 1 ? [a, fA(a)] : [a, fA(a), fB(a)]);
+      }
+    } else {
+      for (let a = 0; a <= 1; a++) {
+        for (let b = 0; b <= 1; b++) {
+          rows.push(salidas === 1 ? [a, b, fA(a,b)] : [a, b, fA(a,b), fB(a,b)]);
+        }
+      }
+    }
+    return rows;
+  }
 
+  const distractores = [];
+  const usedPairs = new Set();
+  const keyPair = (a,b) => `${a}|${b||'-'}`;
+  usedPairs.add(keyPair(f1Name, f2Name));
 
+  if (salidas === 1) {
+    const pool = funcKeys.filter(k => k !== f1Name);
+    while (distractores.length < 3 && pool.length) {
+      const pick = pool.splice(Math.floor(Math.random()*pool.length),1)[0];
+      if (!usedPairs.has(keyPair(pick, null))) {
+        usedPairs.add(keyPair(pick, null));
+        distractores.push(tablaHTML(buildRowsFrom(pick, null), entradas, salidas));
+      }
+    }
+  } else {
+    const pairs = [];
+    for (let i = 0; i < funcKeys.length; i++) {
+      for (let j = 0; j < funcKeys.length; j++) {
+        const p = keyPair(funcKeys[i], funcKeys[j]);
+        if (!usedPairs.has(p)) pairs.push([funcKeys[i], funcKeys[j]]);
+      }
+    }
+    // barajar y tomar 3
+    for (let k = pairs.length - 1; k > 0; k--) {
+      const r = Math.floor(Math.random() * (k + 1));
+      [pairs[k], pairs[r]] = [pairs[r], pairs[k]];
+    }
+    for (let i = 0; i < Math.min(3, pairs.length); i++) {
+      distractores.push(
+        tablaHTML(buildRowsFrom(pairs[i][0], pairs[i][1]), entradas, salidas)
+      );
+    }
+  }
+  while (distractores.length < 3) {
+    distractores.push(tablaHTML(truthRows, entradas, salidas, ["X","Y","Z","W"].slice(0, entradas + salidas)));
+  }
+
+  const opciones = shuffle([correcta, ...distractores]);
+
+  // --- Generar señales garantizando TODAS las combinaciones ---
+  let combos = [];
+  if (entradas === 1) {
+    combos = [[0],[1]];
+  } else {
+    combos = [[0,0],[0,1],[1,0],[1,1]];
+  }
+  // barajar combos
+  for (let i = combos.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [combos[i], combos[j]] = [combos[j], combos[i]];
+  }
+  // repetir hasta cubrir pasos
+  while (combos.length < pasos) {
+    combos = combos.concat(combos);
+  }
+  combos = combos.slice(0,pasos);
+  const e1 = combos.map(c => c[0]);
+  const e2 = entradas === 2 ? combos.map(c => c[1]) : null;
+  const s1 = e1.map((a,i)=> entradas===1 ? f1(a) : f1(a, e2[i]));
+  const s2 = salidas===2 ? e1.map((a,i)=> entradas===1 ? f2(a) : f2(a, e2[i])) : null;
+
+  function generarSenal(bits, yBase, amplitud) {
+    let puntos = `${startX},${yBase} `;
+    let x = startX, nivel = yBase;
+    for (let i = 0; i < bits.length; i++) {
+      const y = bits[i] ? yBase - amplitud : yBase;
+      puntos += `${x},${nivel} ${x},${y} `;
+      x += stepX;
+      puntos += `${x},${y} `;
+      nivel = y;
+    }
+    return puntos;
+  }
+
+  // SVG cronograma
+  let svg = `<svg width="${svgWidth}" height="${svgHeight}" style="border:1px solid #ccc;background:#f9f9f9;">`;
+  for (let i = 0; i <= pasos; i++) {
+    const x = startX + i * stepX;
+    svg += `<line x1="${x}" y1="10" x2="${x}" y2="${svgHeight-10}" stroke="#aaa" stroke-dasharray="3,3"/>`;
+  }
+
+  let y = yBase0;
+  svg += `<polyline points="${generarSenal(e1, y, amp)}" fill="none" stroke="green" stroke-width="2"/>`;
+  svg += `<text x="${labelX}" y="${y+5}" font-size="12">Entrada 1</text>`;
+  if (entradas === 2) {
+    y += yStep;
+    svg += `<polyline points="${generarSenal(e2, y, amp)}" fill="none" stroke="blue" stroke-width="2"/>`;
+    svg += `<text x="${labelX}" y="${y+5}" font-size="12">Entrada 2</text>`;
+  }
+  y += yStep;
+  svg += `<polyline points="${generarSenal(s1, y, amp)}" fill="none" stroke="orange" stroke-width="2"/>`;
+  svg += `<text x="${labelX}" y="${y+5}" font-size="12">${salidas === 1 ? "Salida" : "Salida 1"}</text>`;
+  if (salidas === 2) {
+    y += yStep;
+    svg += `<polyline points="${generarSenal(s2, y, amp)}" fill="none" stroke="red" stroke-width="2"/>`;
+    svg += `<text x="${labelX}" y="${y+5}" font-size="12">Salida 2</text>`;
+  }
+  svg += `</svg>`;
+
+  return {
+    mode: "single",
+    prompt: `Observa el cronograma:<br>${svg}<br><br>¿Cuál es la tabla de verdad que describe este comportamiento?`,
+    options: opciones,
+    correct: [opciones.indexOf(correcta)],
+    modelos: ["B","D"],
+    repeatable: true
+  };
+}
 
 
 
@@ -4129,8 +4606,6 @@ function pregunta_electricidad_estatica_26() {
 
 
 </script>
-
-
 </script>
 </body>
 </html>
